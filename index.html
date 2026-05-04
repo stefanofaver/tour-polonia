@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Polonia 2026">
+<title>Polonia · Maggio 2026</title>
+<style>
+:root {
+  --navy: #1B2A4E;
+  --gold: #B68F40;
+  --gold-soft: #E8D9B8;
+  --cream: #FAF7F0;
+  --text: #1B2A4E;
+  --muted: #6B7280;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.header {
+  text-align: center;
+  margin-bottom: 36px;
+  padding-top: 32px;
+}
+.label {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.title {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 48px;
+  color: var(--navy);
+  line-height: 1.05;
+  margin-bottom: 10px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  font-style: italic;
+}
+.divider {
+  width: 50px;
+  height: 1px;
+  background: var(--gold);
+  margin: 24px auto;
+}
+.tour-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tour-card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px 22px;
+  box-shadow: 0 8px 24px rgba(27, 42, 78, 0.08);
+  border: 1px solid #EFE9D9;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.tour-card:active {
+  transform: scale(0.98);
+}
+.tour-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tour-num {
+  flex: 0 0 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 24px;
+  font-weight: 700;
+}
+.tour-num.gold { background: var(--gold); }
+.tour-info { flex: 1; min-width: 0; }
+.tour-day {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.tour-title {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  color: var(--navy);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.tour-stops {
+  font-size: 12px;
+  color: var(--muted);
+}
+.tour-arrow {
+  flex: 0 0 20px;
+  color: var(--gold);
+  font-size: 22px;
+}
+.footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 32px 0 16px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="label">Maggio 2026</div>
+    <div class="title">Polonia</div>
+    <div class="subtitle">Tour audio per Stefano e Francesca</div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="tour-list">
+    <a href="danzica.html" class="tour-card">
+      <div class="tour-row">
+        <div class="tour-num">1</div>
+        <div class="tour-info">
+          <div class="tour-day">Venerdì 8 maggio</div>
+          <div class="tour-title">Danzica</div>
+          <div class="tour-stops">12 tappe · Via Reale, Lungofiume, Solidarność</div>
+        </div>
+        <div class="tour-arrow">›</div>
+      </div>
+    </a>
+
+    <a href="cracovia.html" class="tour-card">
+      <div class="tour-row">
+        <div class="tour-num gold">2</div>
+        <div class="tour-info">
+          <div class="tour-day">Domenica 10 maggio · 60° di Francesca</div>
+          <div class="tour-title">Cracovia</div>
+          <div class="tour-stops">14 tappe · Wawel, Città Vecchia, Kazimierz</div>
+        </div>
+        <div class="tour-arrow">›</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer">
+    Buon viaggio · Buon compleanno
+  </div>
+</div>
+</body>
+</html>

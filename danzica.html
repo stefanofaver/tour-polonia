@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Danzica">
+<title>Danzica · Tour audio</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --navy: #1B2A4E;
+  --gold: #B68F40;
+  --gold-soft: #E8D9B8;
+  --cream: #FAF7F0;
+  --cream-2: #F1ECE0;
+  --text: #1B2A4E;
+  --muted: #6B7280;
+  --shadow: 0 8px 28px rgba(27, 42, 78, 0.10);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bot: env(safe-area-inset-bottom);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+header {
+  background: var(--navy);
+  color: var(--cream);
+  padding: calc(var(--safe-top) + 12px) 18px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+.head-row { display: flex; justify-content: space-between; align-items: center; }
+.head-title { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 22px; letter-spacing: 0.5px; }
+.head-sub { color: var(--gold-soft); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+.head-counter { background: rgba(255,255,255,0.10); border-radius: 14px; padding: 6px 12px; font-size: 12px; font-weight: 600; }
+
+.section-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--cream-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: calc(var(--safe-top) + 56px);
+  z-index: 90;
+}
+.section-tabs::-webkit-scrollbar { display: none; }
+.section-tab {
+  flex: 0 0 auto;
+  background: white;
+  border: 1px solid #E5DDC8;
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.section-tab.active {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+
+#map {
+  width: 100%;
+  height: 38vh;
+  min-height: 250px;
+  background: #DCE3EC;
+}
+.leaflet-popup-content-wrapper { border-radius: 10px; font-family: -apple-system, sans-serif; }
+.leaflet-popup-content { font-size: 13px; margin: 10px 14px; }
+.numbered-marker {
+  background: var(--navy);
+  color: white;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: Georgia, serif;
+}
+.numbered-marker.celebration { background: var(--gold); }
+
+.stops-list { padding: 14px 14px calc(var(--safe-bot) + 100px); }
+.stop-card {
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid #EFE9D9;
+}
+.stop-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  gap: 14px;
+}
+.stop-num {
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 18px;
+}
+.stop-num.celebration { background: var(--gold); }
+.stop-info { flex: 1; min-width: 0; }
+.stop-title {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  color: var(--navy);
+  font-weight: 600;
+  margin-bottom: 2px;
+  line-height: 1.25;
+}
+.stop-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.stop-meta span::before { content: "•"; margin-right: 6px; color: var(--gold); }
+.stop-meta span:first-child::before { content: ""; margin: 0; }
+
+.expand-icon {
+  flex: 0 0 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.stop-card.open .expand-icon { transform: rotate(180deg); }
+
+.stop-body { display: none; padding: 0 18px 18px; }
+.stop-card.open .stop-body { display: block; }
+
+.stop-body p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.stop-body p.intro {
+  font-style: italic;
+  color: var(--gold);
+  font-size: 13.5px;
+  border-left: 2px solid var(--gold);
+  padding-left: 12px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.stop-body p strong { color: var(--navy); font-weight: 700; }
+
+.stop-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary.playing { background: #C0392B; }
+.btn-secondary {
+  background: var(--cream-2);
+  color: var(--navy);
+  border: 1px solid #E5DDC8;
+}
+.btn:active { opacity: 0.85; }
+
+.floating-player {
+  position: fixed;
+  bottom: calc(var(--safe-bot) + 12px);
+  left: 12px;
+  right: 12px;
+  background: var(--navy);
+  color: white;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 30px rgba(27, 42, 78, 0.40);
+  z-index: 200;
+}
+.floating-player.show { display: flex; }
+.fp-info { flex: 1; min-width: 0; }
+.fp-label { font-size: 10px; letter-spacing: 1.5px; color: var(--gold-soft); text-transform: uppercase; }
+.fp-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fp-controls { display: flex; gap: 8px; }
+.fp-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+.fp-btn.main { background: var(--gold); }
+
+.onboarding {
+  position: fixed;
+  inset: 0;
+  background: var(--cream);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 28px;
+  text-align: center;
+  overflow-y: auto;
+}
+.onboarding.hidden { display: none; }
+.ob-label {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ob-title {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 42px;
+  color: var(--navy);
+  margin-bottom: 12px;
+  line-height: 1.05;
+}
+.ob-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  font-style: italic;
+}
+.ob-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  max-width: 340px;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.ob-card strong { color: var(--navy); }
+.ob-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+  margin: 20px auto;
+}
+.ob-btn {
+  background: var(--navy);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 18px;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<div class="onboarding" id="onboarding">
+  <div class="ob-label">Tour audio</div>
+  <div class="ob-title">Danzica</div>
+  <div class="ob-sub">— la città anseatica, raccontata —</div>
+
+  <div class="ob-card">
+    <strong>12 tappe</strong> divise in tre sezioni:<br>
+    Via Reale · Lungofiume · Solidarność<br>
+    <br>
+    Tocca una tappa per <strong>aprirla</strong>, poi <strong>"Ascolta"</strong> per sentire la narrazione.
+  </div>
+
+  <div class="ob-card" style="background: #FFF8E7; border: 1px solid var(--gold);">
+    <strong style="color: var(--gold);">⚙️ Per la migliore qualità audio</strong><br>
+    <br>
+    Se non l'hai già fatto per il tour di Cracovia, scarica la voce italiana premium su iPhone:<br>
+    <br>
+    <strong>Impostazioni → Accessibilità → Contenuto letto → Voci → Italiano</strong><br>
+    <br>
+    Cerca <strong>"Federica (Premium)"</strong> o <strong>"Alice (Premium/Enhanced)"</strong> e tocca per scaricarla.<br>
+    <br>
+    <em>Auricolari consigliati nei luoghi affollati.</em>
+  </div>
+
+  <button class="ob-btn" id="startBtn">Comincia il tour</button>
+  <div class="ob-divider"></div>
+</div>
+
+<header>
+  <div class="head-row">
+    <div>
+      <div class="head-title">Danzica</div>
+      <div class="head-sub">Tour audio · Venerdì 8 maggio</div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="locateBtn" style="background: rgba(255,255,255,0.10); border: none; color: white; width: 32px; height: 32px; border-radius: 16px; font-size: 14px; cursor: pointer;" title="Dove sono">📍</button>
+      <button id="settingsBtn" style="background: rgba(255,255,255,0.10); border: none; color: white; width: 32px; height: 32px; border-radius: 16px; font-size: 16px; cursor: pointer;">⚙</button>
+      <div class="head-counter" id="counter">12 tappe</div>
+    </div>
+  </div>
+</header>
+
+<div id="settingsPanel" style="display: none; background: white; padding: 16px 18px; border-bottom: 1px solid #E5DDC8; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+  <div style="font-family: Georgia, serif; font-size: 15px; color: var(--navy); font-weight: 600; margin-bottom: 10px;">Voce narrante</div>
+  <select id="voiceSelect" style="width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #E5DDC8; border-radius: 8px; background: white; color: var(--text); margin-bottom: 10px;"></select>
+  <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+    <label style="font-size: 13px; color: var(--muted); flex: 0 0 70px;">Velocità</label>
+    <input type="range" id="rateSlider" min="0.7" max="1.3" step="0.05" value="0.92" style="flex: 1; accent-color: var(--gold);">
+    <span id="rateValue" style="font-size: 12px; color: var(--muted); min-width: 32px; text-align: right;">0.92</span>
+  </div>
+  <button id="testVoiceBtn" style="background: var(--gold); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; width: 100%;">▶ Prova la voce</button>
+  <div style="font-size: 11px; color: var(--muted); font-style: italic; margin-top: 8px; line-height: 1.4;">Le voci con "Premium" o "Enhanced" sono di qualità superiore.</div>
+</div>
+
+<div class="section-tabs">
+  <div class="section-tab active" data-section="all">Tutto</div>
+  <div class="section-tab" data-section="royal">Via Reale</div>
+  <div class="section-tab" data-section="river">Lungofiume</div>
+  <div class="section-tab" data-section="solidarity">Solidarność</div>
+</div>
+
+<div id="map"></div>
+
+<div class="stops-list" id="stopsList"></div>
+
+<div class="floating-player" id="floatingPlayer">
+  <div class="fp-info">
+    <div class="fp-label">In riproduzione</div>
+    <div class="fp-title" id="fpTitle">—</div>
+  </div>
+  <div class="fp-controls">
+    <button class="fp-btn" id="fpPause">⏸</button>
+    <button class="fp-btn main" id="fpStop">⏹</button>
+  </div>
+</div>
+
+<div class="footer-note">Danzica & Cracovia · Maggio 2026</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// =====================================================
+// TOUR DATA – 12 stops with full narration
+// =====================================================
+const STOPS = [
+  // === VIA REALE (1-6) ===
+  {
+    n: 1, section: "royal", icon: "🏰",
+    title: "Porta Alta",
+    subtitle: "Brama Wyżynna",
+    duration: "3 min",
+    walking: "Inizio del percorso",
+    coords: [54.3499324, 18.6465337],
+    intro: "Da qui i re polacchi entravano in città.",
+    text: `Cominciamo il tour di Danzica dove cominciava la cerimonia. La Porta Alta — Brama Wyżynna — è il primo varco della Via Reale, il percorso che ogni nuovo re polacco doveva attraversare per essere riconosciuto come sovrano della città.
+
+La porta fu costruita nel 1574, subito dopo che Danzica era diventata, nel 1457, una città reale autonoma sotto la Corona polacca. Il re Casimiro Quarto le aveva concesso un privilegio straordinario: zecca propria, leggi proprie, esercito proprio, lingua propria — il tedesco. Danzica era polacca ma non parlava polacco. Era un'enclave germanica con re slavo. Una repubblica mercantile dentro un regno cattolico, simile a Venezia o ad Amburgo.
+
+Lo stemma scolpito al centro porta tre simboli: l'aquila polacca, il leone della Pomerania, il grifo prussiano. Le tre identità che convivevano qui in equilibrio fragile. Sotto la corona, l'iscrizione latina dice: "Le città giuste si reggono con la concordia, le ingiuste cadono per le discordie". Era una frase di Sallustio. I patrizi di Danzica la conoscevano a memoria.
+
+Davanti a noi si apre la Via Lunga — Długa — che porta dritta al cuore della città. Tre porte, una via diritta, e in fondo il Municipio. Camminiamo.`
+  },
+  {
+    n: 2, section: "royal", icon: "🚪",
+    title: "Porta d'Oro",
+    subtitle: "Złota Brama",
+    duration: "3 min",
+    walking: "1 min",
+    coords: [54.3496766, 18.6480469],
+    intro: "Le sette virtù di un buon cittadino.",
+    text: `Pochi metri più avanti, la Porta d'Oro. Costruita nel 1612 dall'architetto Abraham van den Block, è l'opera più rinascimentale della città. Lo stile è manierista olandese, perché Danzica nei secoli d'oro guardava più ad Amsterdam che a Cracovia.
+
+Sopra di noi, otto statue allegoriche scolpite da Pieter Ringering. Sul lato esterno, verso la Porta Alta, ci sono le quattro virtù necessarie ai cittadini: Pace, Libertà, Ricchezza, Fama. Sul lato interno, verso la Via Lunga, le quattro virtù necessarie a chi governa la città: Concordia, Giustizia, Pietà, Prudenza.
+
+L'iscrizione latina sopra il portale, in caratteri dorati, dice: "Concordia parvae res crescunt, discordia maximae dilabuntur" — "Con la concordia le piccole cose crescono, con la discordia le più grandi rovinano". È ancora Sallustio, lo stesso autore della Porta Alta. I patrizi di Danzica avevano un'ossessione: la concordia. Sapevano che la loro ricchezza dipendeva dal mantenere la pace fra fazioni cattoliche e protestanti, fra polacchi e tedeschi.
+
+La porta fu rasa al suolo nel 1945 dai bombardamenti sovietici e dall'incendio della città. Quello che vedete è ricostruito mattone su mattone fra il 1957 e il 1990. Le statue originali sono al Museo Nazionale di Varsavia, queste sono copie. Ma il lavoro di ricostruzione è stato impeccabile.`
+  },
+  {
+    n: 3, section: "royal", icon: "🏛️",
+    title: "Via Lunga",
+    subtitle: "Ulica Długa",
+    duration: "3 min",
+    walking: "Camminata di 5 min",
+    coords: [54.3492141, 18.6502683],
+    intro: "Una via lunga settecento anni.",
+    text: `Stiamo percorrendo la Via Lunga, l'arteria principale di Danzica fin dal Trecento. Quattrocento metri di facciate strette, alte, dipinte in colori pastello — verdi, gialli, rosa, ocra. Nessuna è uguale all'altra.
+
+Guardate bene: ogni casa è larga sei o sette metri, ma alta quattro o cinque piani. Perché? Perché la tassa veniva calcolata sul fronte stradale, non sulla profondità o sull'altezza. Quindi i mercanti costruivano stretto sulla via e si allungavano dentro. Le case sono lunghe fino a quaranta metri, sviluppate in profondità, con cortili, magazzini, abitazione, e in cima ampi solai per stivare le merci.
+
+Le facciate sono fiamminghe nel design — frontoni a gradoni, riccioli barocchi, statue sui timpani — ma realizzate con tecniche e mani locali. Ogni casa aveva il suo simbolo: un cervo, un leone, una stella, un'ancora. I patrizi non avevano numeri civici. Ti chiamavano dicendo "alla casa del cervo dorato", "alla casa del pellicano".
+
+Notate i piccoli rialzi davanti agli ingressi: sono i "przedproża", le terrazze rialzate tipiche di Danzica. Erano ornate con statue, ringhiere in ferro battuto, sedili in pietra. Servivano a tenere le merci sopra il livello del fango, e d'estate a guardare il viavai della via. Quasi tutti distrutti durante l'incendio del 1945, sono stati ricostruiti negli anni Settanta.
+
+La città intera fu distrutta al novanta per cento durante la Seconda Guerra Mondiale. La ricostruzione che vedete è quasi tutta posteriore agli anni Cinquanta, ma fatta con i progetti originali, le foto, i diari dei viaggiatori, le lapidi recuperate dai cumuli di macerie. È una ricostruzione, non una falsificazione. È l'idea polacca di memoria: anche se le pietre sono nuove, la storia che raccontano è vera.`
+  },
+  {
+    n: 4, section: "royal", icon: "🔱",
+    title: "Fontana del Nettuno",
+    subtitle: "Fontanna Neptuna",
+    duration: "3 min",
+    walking: "1 min",
+    coords: [54.3485459, 18.6532258],
+    intro: "Il dio del mare con il tridente verso il cielo.",
+    text: `Davanti a noi si apre la piazza più grande della Via Reale: il Lungo Mercato — Długi Targ. E qui, al centro, dal 1633, c'è la Fontana del Nettuno. È il simbolo di Danzica come è il leone di San Marco a Venezia.
+
+La statua in bronzo è opera di Peter Husen e Johann Rogge, scultori fiamminghi. Il piedistallo in pietra calcarea fu disegnato da Abraham van den Block, lo stesso architetto della Porta d'Oro. Il dio del mare regge il tridente con una mano, e con l'altra accenna un gesto di reverenza verso le finestre del Municipio: secondo la tradizione, il Nettuno si inchina al re polacco quando questi compare al balcone delle udienze. Un dettaglio politico, non solo decorativo.
+
+Una leggenda popolare racconta che proprio dalle acque di questa fontana nacque, in tempi antichi, lo Złota Woda — l'Acqua d'Oro — il liquore tipico di Danzica con scaglie d'oro vero in sospensione. Il Nettuno, infastidito dalle monete che i passanti gettavano in fontana, le avrebbe ridotte in scaglie che si sciolsero nell'acqua. È una bella storia, ma il vero Goldwasser fu inventato qui nel 1598 da un mercante mennonita olandese, Ambrosius Vermöllen. Si beve ancora oggi, freddo, dopo i pasti. Lo proveremo a cena.
+
+Durante la guerra, gli abitanti della città riuscirono a smontare la statua e nasconderla in un sotterraneo prima dell'arrivo dei sovietici. Tornò sulla sua fontana solo nel 1954.`
+  },
+  {
+    n: 5, section: "royal", icon: "👑",
+    title: "Corte di Artus",
+    subtitle: "Dwór Artusa",
+    duration: "3 min",
+    walking: "30 secondi",
+    coords: [54.3487919, 18.653381],
+    intro: "Un club esclusivo di mercanti, ispirato a Re Artù.",
+    text: `Subito dietro la Fontana del Nettuno, c'è la Corte di Artus. Un edificio del Quattrocento, ricostruito più volte fino alla forma attuale del 1617. Il nome viene da Re Artù, il leggendario re britannico — perché qui, dal Trecento, si riuniva la confraternita più esclusiva dei mercanti di Danzica, che si paragonavano ai cavalieri della Tavola Rotonda.
+
+Per essere ammessi bisognava essere mercanti di lungo corso, sposati, di buona famiglia, di religione cristiana. Si pagava una quota d'ingresso considerevole. Ci si riuniva qui per concludere affari, mangiare, bere, ascoltare musica. La sala principale, alta diciassette metri, è una delle più grandi sale rinascimentali laiche d'Europa.
+
+Dentro, c'è una stufa monumentale alta dodici metri, in piastrelle di ceramica colorata, costruita nel 1546 dal maestro vasaio Georg Stelzener. Cinquecentosessanta piastrelle, ognuna diversa, che raffigurano regnanti europei, scene mitologiche, simboli astrologici. Probabilmente la stufa in maiolica più importante mai costruita.
+
+Ai mercanti di Danzica si deve un dettaglio commerciale che ha fatto la storia: l'invenzione delle prime "obbligazioni cittadine". Per finanziare la ricostruzione delle mura nel Cinquecento, il Consiglio della città emise titoli di debito che i mercanti compravano con promessa di rendita annuale. Era una versione embrionale dei moderni bond comunali. Cose pratiche, fatte da gente concreta.
+
+Oggi la Corte è un museo. Si entra, si vede la sala, la stufa, i modelli di nave appesi al soffitto, le statue di cavalieri sulle pareti. Una visita di trenta minuti basta.`
+  },
+  {
+    n: 6, section: "royal", icon: "🗼",
+    title: "Municipio della Città Principale",
+    subtitle: "Ratusz Głównego Miasta",
+    duration: "4 min",
+    walking: "1 min",
+    coords: [54.3486855, 18.6527963],
+    intro: "Centottanta scalini, ottocento anni di storia.",
+    text: `La torre alta che vediamo davanti a noi è il Municipio della Città Principale — Ratusz Głównego Miasta. Costruito nel Trecento, ampliato nel Quattrocento, decorato nel Cinquecento, distrutto nel 1945, ricostruito negli anni Cinquanta. La storia di Danzica in tre date.
+
+La torre è alta ottantadue metri. In cima, sulla guglia dorata, c'è la statua del re Sigismondo Augusto, l'ultimo Jagellone, che concesse alla città i suoi privilegi maggiori. Per ringraziarlo, il Consiglio mise lassù il suo nome, dorato, visibile da tutta la città. È ancora lì.
+
+Dentro, la sala più importante è la Grande Sala del Consiglio — la Sala Rossa — completamente decorata fra il 1593 e il 1611. Ottanta dipinti, una iconografia complessa centrata sul concetto di "Buon Governo". È qualcosa di paragonabile alla Sala dei Nove di Siena, ma in chiave rinascimentale del Nord. Il dipinto centrale del soffitto, "L'Apoteosi di Danzica", è opera di Isaac van den Blocke — fratello di Abraham, l'architetto della Porta d'Oro. Lo Block era una dinastia di artisti, qui.
+
+La torre si può salire — centottanta scalini, niente ascensore — e dalla cima si vede tutta la città vecchia, il porto, la Vistola, e nelle giornate limpide perfino le gru dei cantieri navali, dove nacque Solidarność. Vale la fatica.
+
+Aneddoto. Quando i nazisti conquistarono Danzica nel settembre 1939, Albert Forster, il gauleiter, salì in cima a questa torre per fare il discorso di annessione al Reich. Quando la città fu liberata nel marzo 1945, il primo gesto dei polacchi fu di salire qui e issare di nuovo la bandiera bianca e rossa al posto della svastica. La torre, danneggiata dai bombardamenti, fu uno dei primi edifici ad essere ricostruiti, fra il 1950 e il 1970. È tornata esattamente come era nel 1561.`
+  },
+
+  // === LUNGOFIUME (7-9) ===
+  {
+    n: 7, section: "river", icon: "🚢",
+    title: "Porta Verde",
+    subtitle: "Zielona Brama",
+    duration: "3 min",
+    walking: "3 min",
+    coords: [54.3479081, 18.6557242],
+    intro: "Da qui la città si affaccia sul fiume.",
+    text: `Eccoci alla fine della Via Reale. La Porta Verde — Zielona Brama — è l'ultima porta del percorso, quella che si affaccia sul fiume Motława. Costruita fra il 1564 e il 1568 dall'architetto Hans Kramer di Dresda, è in stile manierista olandese, con quattro grandi passaggi a volta che permettevano alle carrozze di entrare e uscire dalla città.
+
+Il nome non viene dal colore, ma dal verderame del rame che originariamente copriva il tetto. La porta non è mai stata residenza del re polacco, ma fu costruita come tale: ogni nuovo sovrano polacco, dopo aver attraversato la Via Reale, doveva trascorrere qui la prima notte come ospite della città. In realtà nessun re vi dormì mai. La porta era troppo umida, il rumore del porto era assordante, e i sovrani preferivano alloggiare al castello di Oliwa, fuori città.
+
+Una persona invece ha vissuto qui: Lech Wałęsa, dopo aver lasciato la presidenza della Repubblica nel 1995. Per qualche anno l'edificio è stato la sua residenza di rappresentanza, prima di essere trasformato nella sede del Museo Nazionale.
+
+Fra Porta Verde e fiume si stende il Lungo Ponte — Długie Pobrzeże — la passeggiata sul lungofiume. È il momento di prendere fiato. Dal Trecento fino al Settecento, qui attraccavano le navi olandesi, inglesi, danesi, francesi, italiane. Danzica era il porto del grano della Polonia: per duecento anni, il novanta per cento del grano consumato a Amsterdam veniva da qui. La città divenne così ricca che chiamarono la Vistola "il fiume d'oro".`
+  },
+  {
+    n: 8, section: "river", icon: "🏗️",
+    title: "Żuraw – la Gru medievale",
+    subtitle: "La macchina più potente del Trecento",
+    duration: "3 min",
+    walking: "5 min sul lungofiume",
+    coords: [54.3504943, 18.6575279],
+    intro: "Trent'anni di storia in un edificio impossibile.",
+    text: `Avanti a noi, dominante sul fiume, lo Żuraw — la Gru. Costruita fra il 1442 e il 1444, è il simbolo industriale di Danzica. Per quattro secoli è stata la più grande gru portuale d'Europa — capace di sollevare carichi fino a quattro tonnellate, e di alzare gli alberi maestri delle navi a venticinque metri di altezza.
+
+Come funzionava? Dentro, due grandi ruote di legno alte sei metri ciascuna, una sopra l'altra, mosse da uomini che camminavano dentro come criceti — quattro uomini per ruota. Le ruote facevano girare un asse, l'asse sollevava il carico tramite carrucole. Una macchina puramente umana, senz'acqua, senza vento, senza animali. Solo gambe d'uomo.
+
+Gli uomini che camminavano nelle ruote erano facchini di porto, lavoravano dieci ore al giorno e venivano pagati a peso. Erano fra i lavoratori più pagati della città, per la fatica e per il rischio: bastava un cedimento di un ingranaggio e si volava giù dentro la ruota. La pena per uno sciopero era la condanna a morte, ma la mortalità sul lavoro era così alta che i facchini si auto-tassavano per finanziare le vedove e gli orfani. Una delle prime forme di mutua assicurazione operaia in Europa.
+
+L'edificio in mattoni rossi che vediamo è in realtà una doppia torre — due torri quadrate fra cui sta sospesa la macchina. Le torri non hanno solo funzione strutturale: servivano anche da fortificazione, perché la gru era una struttura strategica. Chi controllava la gru, controllava il porto. Chi controllava il porto, controllava il commercio.
+
+Bombardata nel 1945, la gru fu ricostruita fra il 1956 e il 1962. Oggi ospita una sezione del Museo Nazionale Marittimo. Si può entrare, vedere le ruote ricostruite a grandezza naturale, capire come funzionavano. Quando si esce, si guarda la gru con altri occhi.`
+  },
+  {
+    n: 9, section: "river", icon: "✨",
+    title: "Via Mariacka",
+    subtitle: "L'oro del Baltico",
+    duration: "4 min",
+    walking: "8 min — torniamo verso il centro",
+    coords: [54.3497628, 18.6540562],
+    intro: "La via dei terrazzi e dell'ambra.",
+    text: `Lasciamo il lungofiume e attraverso Via Wartka rientriamo nel centro storico. Fra le tante vie laterali, una sola merita una sosta lunga: Via Mariacka. È la più bella di Danzica, e una delle più belle d'Europa.
+
+Cento metri di pavé, fra due file di case patrizie del Cinquecento. Davanti a ogni casa, le terrazze rialzate in pietra — i przedproża che abbiamo già visto, ma qui sono perfettamente conservati o ricostruiti. Le ringhiere in ferro battuto, le sculture di leoni e di sirene a guardia degli scalini, le panchine di pietra: dà l'idea di entrare in un set teatrale rinascimentale.
+
+Sotto le terrazze, in cantine umide, ci sono botteghe. Tutte di una cosa sola: ambra. Danzica è la capitale mondiale dell'ambra del Baltico — il fossile di resina di pini scomparsi quaranta milioni di anni fa, levigato dalle onde del mare e raccolto sulle spiagge della Pomerania. La lavorazione dell'ambra qui è un mestiere documentato dal Trecento: la "Confraternita degli Ambrari" di Danzica era una delle più ricche corporazioni della città.
+
+L'ambra di qualità si riconosce da pochi segni: galleggia in acqua salata. Si scalda al tatto velocemente. Ha inclusioni naturali — bollicine, zampette di insetti preistorici, foglie. La plastica, invece, è fredda, affonda, è troppo perfetta. Comprare ambra qui è un mestiere: chiedere il certificato d'origine, controllare la luce ultravioletta, fidarsi solo di botteghe con vetrine e nome.
+
+Ho una piccola idea per stasera. La via Mariacka ha un'atmosfera particolare alla luce dei lampioni a olio — sì, sono ancora a olio, accesi a mano ogni sera. Ci torniamo in serata, con calma, e cerchiamo qualcosa di importante per il compleanno. Niente di scelto in fretta. Qualcosa che ci ricordi questa via.
+
+In fondo, la Basilica di Santa Maria. La nostra prossima tappa.`
+  },
+  {
+    n: 10, section: "river", icon: "⛪",
+    title: "Basilica di Santa Maria",
+    subtitle: "Bazylika Mariacka",
+    duration: "4 min",
+    walking: "1 min",
+    coords: [54.3498349, 18.6530561],
+    intro: "Cento metri per cinquanta. Cinque navate. Venticinquemila fedeli.",
+    text: `Davanti a noi, la Basilica di Santa Maria di Danzica — la più grande chiesa di mattoni del mondo. Le dimensioni sono impressionanti: centocinque metri di lunghezza, sessantasei di larghezza al transetto, trenta metri di altezza alla volta. Può contenere venticinquemila persone in piedi.
+
+La costruzione cominciò nel 1343 e finì nel 1502. Centosessanta anni di lavoro, sei generazioni di mastri muratori. È in mattoni rossi senza intonaco, in stile gotico baltico — il "Backsteingotik". Non c'è una sola pietra naturale nelle pareti esterne: tutto in mattoni cotti localmente, perché la Pomerania non aveva cave di pietra ma argilla in abbondanza.
+
+Dentro, lo spazio è bianco e immenso. Una cattedrale di luce. Le venticinque cappelle laterali ospitavano altari delle varie corporazioni di mestiere: il dei beccai, dei fabbri, dei pescatori, dei marinai. Ogni corporazione finanziava un proprio altare e un proprio cappellano.
+
+Quattro pezzi vanno cercati con attenzione. Primo: l'orologio astronomico di Hans Düringer, costruito fra il 1464 e il 1470. Quattordici metri di altezza, mostra l'ora, il giorno, il mese, la posizione del sole, le fasi della luna, e a mezzogiorno fa una processione di figure: i Re Magi, gli Apostoli, la morte. Düringer fu accecato dopo averlo finito, per ordine del Consiglio cittadino, per impedirgli di costruirne uno simile altrove. Poi accecato si suicidò. Almeno così dice la leggenda.
+
+Secondo: la pietra tombale di Hans Memling, il pittore fiammingo. Memling visse un anno qui, intorno al 1473, e dipinse il "Giudizio Universale" che era proprio in questa chiesa. Oggi il dipinto è al Museo Nazionale di Danzica, qui c'è una copia.
+
+Terzo: la salita alla torre. Quattrocentonove gradini, settantotto metri di altezza, vista a trecentosessanta gradi su tutta Danzica. Vale la fatica, in una giornata limpida si vede fino al Mar Baltico.
+
+Quarto: l'acustica. Vi consiglio di provare a parlare a voce normale e ascoltare l'eco. Per i concerti d'organo che si tengono qui in estate, l'acustica è considerata fra le migliori d'Europa.
+
+Quando uscite dalla basilica, riprendiamo Via Lunga in direzione del Centro Solidarność, ultima parte del nostro tour. Sono venti minuti a piedi a nord, oppure dieci minuti in tram dalla fermata Brama Wyżynna.`
+  },
+
+  // === SOLIDARNOŚĆ (11-12) ===
+  {
+    n: 11, section: "solidarity", icon: "🚪",
+    title: "Cancello numero 2",
+    subtitle: "Brama nr 2 – l'antico cantiere navale",
+    duration: "4 min",
+    walking: "20 min a piedi (o 10 min in tram)",
+    coords: [54.3605664, 18.6498817],
+    intro: "Qui è cominciata la fine del comunismo in Europa.",
+    text: `Siamo davanti al Cancello numero 2 dell'antico Cantiere Navale Lenin di Danzica. È un cancello qualunque — sbarre verticali rosse, garitta di guardia, un piccolo presidio. Ma è uno dei luoghi più importanti del Novecento europeo.
+
+Il quattordici agosto 1980, gli operai di questo cantiere proclamarono uno sciopero. La causa scatenante era stata il licenziamento di una donna, Anna Walentynowicz, gruista, attivista clandestina, a cinque mesi dalla pensione. Il licenziamento le avrebbe negato la pensione. Gli operai si fermarono in solidarietà.
+
+Il diciassette agosto, lo sciopero si era esteso a quattrocento aziende della costa baltica. Il Comitato di sciopero, presieduto da un elettricista trentasettenne di nome Lech Wałęsa, formulò ventuno richieste, scritte a mano su tavole di legno e affisse sopra questo cancello. La prima richiesta non era economica: era il riconoscimento di sindacati liberi e indipendenti, fuori dal controllo del Partito. Era una rivoluzione.
+
+Il trentuno agosto 1980, qui, su un tavolo improvvisato con assi di legno, fu firmato l'Accordo di Danzica. Per la prima volta in un paese del blocco sovietico, lo Stato comunista riconosceva un sindacato libero. Wałęsa firmò con una penna gigante, una di quelle penne souvenir con l'immagine di Giovanni Paolo Secondo, scelta non a caso. Quel sindacato si chiamerà Solidarność — Solidarietà. Avrà dieci milioni di iscritti in pochi mesi.
+
+Nove anni dopo, nel giugno 1989, Solidarność vinse le prime elezioni libere in Polonia dal 1939. In novembre crollò il Muro di Berlino. In dicembre cadde Ceaușescu in Romania. Nel 1991 si dissolse l'Unione Sovietica. Tutto era cominciato qui.
+
+I tre alti monumenti che vedete a sinistra del cancello — tre croci di acciaio inossidabile, alte quarantadue metri ciascuna — non commemorano il 1980. Commemorano il 1970. In quell'anno, durante una rivolta operaia precedente, l'esercito polacco aprì il fuoco sui cantieri. Quarantaquattro lavoratori morirono. Il monumento, eretto nel dicembre 1980, fu il primo monumento in tutto il blocco sovietico dedicato a vittime del comunismo. Sulle croci, le ancore — il simbolo della Polonia combattente — e i nomi dei caduti.
+
+Dal cancello entriamo verso il Centro. Il Centro Europeo Solidarność.`
+  },
+  {
+    n: 12, section: "solidarity", icon: "🇪🇺",
+    title: "Centro Europeo Solidarność",
+    subtitle: "Europejskie Centrum Solidarności",
+    duration: "4 min",
+    walking: "2 min",
+    coords: [54.361313, 18.64974],
+    intro: "Un museo, una biblioteca, una memoria.",
+    text: `Eccoci al Centro Europeo Solidarność. L'edificio in lamiera ossidata che vediamo, rosso ruggine, fu inaugurato nel 2014, opera dello studio polacco FORT. La forma volutamente ricorda lo scafo arrugginito di una nave nel cantiere — un omaggio alla classe operaia che fece la rivoluzione.
+
+Dentro, la mostra permanente è divisa in sette sale, ognuna dedicata a un capitolo della storia di Solidarność. Sala A: nascita del movimento, gli scioperi del 1980. Sala B: il giorno della firma, le ventuno richieste. Sala C: l'esplosione di Solidarność, dieci milioni di iscritti in tre mesi. Sala D: la legge marziale del dicembre 1981, gli arresti, l'attività clandestina. Sala E: la lotta degli anni Ottanta, l'attesa, il dolore. Sala F: il crollo del comunismo, le elezioni del 1989, la nuova Polonia. Sala G: il dopo, la transizione, l'allargamento europeo.
+
+L'audioguida è inclusa nel biglietto, in italiano. Due-tre ore sono il giusto, ma se siete stanchi anche un'ora basta per le sale principali. Non c'è un percorso obbligato: si gira liberamente, ci si ferma dove interessa.
+
+Tre dettagli da non perdere. Primo: la sala iniziale ha appesi al soffitto i caschi dei lavoratori del cantiere. Centinaia di caschi rossi, gialli, blu, ognuno con un nome. Sono i caschi degli operai che parteciparono alla rivolta del 1970 e del 1980. Un'installazione potente.
+
+Secondo: alla parete sono affisse le ventuno tavole originali con le richieste manoscritte. Sono tavole di compensato, scritte con un pennarello rosso. Sono iscritte nella lista UNESCO della Memoria del Mondo, accanto alla Magna Carta e ai diari di Anne Frank.
+
+Terzo: nella sala finale c'è la "Stanza Wałęsa". L'ufficio dove l'elettricista, divenuto presidente, ha tenuto incontri istituzionali per anni. Sulla scrivania, la penna Giovanni Paolo Secondo con cui firmò gli Accordi del 1980. Tutto come era.
+
+Sopra il museo c'è una terrazza panoramica con una vista del cantiere, del fiume, della città. Caffè ottimo. Un buon punto per chiudere la giornata, e per pensare.
+
+Una città non si capisce senza capire perché chi l'ha costruita era lì. Danzica costruisce. Costruisce navi, costruisce commerci, costruisce sindacati, costruisce democrazia. Costruisce sempre. È quello che le serve dirsi, dopo aver perso e ricostruito tutto, novecento volte.
+
+Il tour finisce qui. Ora possiamo tornare in centro, andare a cena. Domani Cracovia ci aspetta, ma stasera è di Danzica.`
+  }
+];
+
+// =====================================================
+// APP LOGIC (identical to Krakow tour)
+// =====================================================
+let map, markers = [], currentlyPlaying = null;
+let synth = window.speechSynthesis;
+let currentUtterance = null;
+let italianVoice = null;
+let availableItalianVoices = [];
+let currentRate = 0.92;
+let currentSection = "all";
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('onboarding').classList.add('hidden');
+  if (synth) {
+    const init = new SpeechSynthesisUtterance(' ');
+    init.volume = 0;
+    synth.speak(init);
+    setTimeout(initVoice, 100);
+  }
+});
+
+function rankVoice(v) {
+  const name = v.name.toLowerCase();
+  let score = 0;
+  if (v.lang === 'it-IT') score += 100;
+  else if (v.lang.startsWith('it')) score += 80;
+  if (name.includes('premium')) score += 50;
+  if (name.includes('enhanced')) score += 40;
+  if (name.includes('siri')) score += 30;
+  if (name.includes('federica')) score += 20;
+  if (name.includes('alice')) score += 18;
+  if (name.includes('luca')) score += 15;
+  if (v.localService) score += 10;
+  return score;
+}
+
+function initVoice() {
+  const voices = synth.getVoices();
+  availableItalianVoices = voices
+    .filter(v => v.lang.startsWith('it'))
+    .sort((a, b) => rankVoice(b) - rankVoice(a));
+  if (availableItalianVoices.length > 0) {
+    italianVoice = availableItalianVoices[0];
+    populateVoiceSelector();
+  }
+}
+
+function populateVoiceSelector() {
+  const sel = document.getElementById('voiceSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+  if (availableItalianVoices.length === 0) {
+    const opt = document.createElement('option');
+    opt.textContent = 'Nessuna voce italiana disponibile';
+    sel.appendChild(opt);
+    return;
+  }
+  availableItalianVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    let label = v.name;
+    if (v.name.toLowerCase().includes('premium')) label = '⭐ ' + label;
+    else if (v.name.toLowerCase().includes('enhanced')) label = '✨ ' + label;
+    opt.textContent = label;
+    if (v === italianVoice) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+if (synth) {
+  synth.onvoiceschanged = initVoice;
+  initVoice();
+}
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  const p = document.getElementById('settingsPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('voiceSelect').addEventListener('change', (e) => {
+  italianVoice = availableItalianVoices[parseInt(e.target.value)];
+});
+
+document.getElementById('rateSlider').addEventListener('input', (e) => {
+  currentRate = parseFloat(e.target.value);
+  document.getElementById('rateValue').textContent = currentRate.toFixed(2);
+});
+
+document.getElementById('testVoiceBtn').addEventListener('click', () => {
+  stopSpeech();
+  const u = new SpeechSynthesisUtterance("Buongiorno Francesca. Iniziamo il nostro tour di Danzica. Spero che la voce sia di tuo gradimento.");
+  u.lang = 'it-IT';
+  u.rate = currentRate;
+  if (italianVoice) u.voice = italianVoice;
+  synth.speak(u);
+});
+
+function initMap() {
+  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([54.354, 18.652], 14);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '© OSM © CARTO'
+  }).addTo(map);
+
+  STOPS.forEach(stop => {
+    const isCelebration = stop.section === "solidarity";
+    const cls = isCelebration ? 'celebration' : '';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="numbered-marker ${cls}">${stop.n}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    const marker = L.marker(stop.coords, { icon }).addTo(map);
+    marker.bindPopup(`<strong>${stop.n}. ${stop.title}</strong><br><small>${stop.subtitle}</small>`);
+    marker.on('click', () => {
+      const card = document.querySelector(`[data-stop="${stop.n}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!card.classList.contains('open')) card.classList.add('open');
+      }
+    });
+    markers.push(marker);
+  });
+
+  const points = STOPS.map(s => s.coords);
+  L.polyline(points, { color: '#B68F40', weight: 2, opacity: 0.5, dashArray: '4, 6' }).addTo(map);
+}
+
+function renderStops() {
+  const list = document.getElementById('stopsList');
+  list.innerHTML = '';
+  const filtered = STOPS.filter(s => currentSection === "all" || s.section === currentSection);
+  document.getElementById('counter').textContent = filtered.length + ' tappe';
+
+  filtered.forEach(stop => {
+    const isSolidarity = stop.section === "solidarity";
+    const numClass = isSolidarity ? 'celebration' : '';
+    const card = document.createElement('div');
+    card.className = 'stop-card';
+    card.dataset.stop = stop.n;
+    card.innerHTML = `
+      <div class="stop-header">
+        <div class="stop-num ${numClass}">${stop.n}</div>
+        <div class="stop-info">
+          <div class="stop-title">${stop.title}</div>
+          <div class="stop-meta">
+            <span>${stop.subtitle}</span>
+            <span>${stop.duration}</span>
+            <span class="distance" data-n="${stop.n}"></span>
+          </div>
+        </div>
+        <div class="expand-icon">▼</div>
+      </div>
+      <div class="stop-body">
+        <p class="intro">${stop.intro}</p>
+        ${stop.text.split('\n\n').map(p => `<p>${p}</p>`).join('')}
+        <div class="stop-controls">
+          <button class="btn btn-primary play-btn" data-n="${stop.n}">
+            <span class="play-icon">▶</span> <span class="play-label">Ascolta</span>
+          </button>
+          <button class="btn btn-secondary navigate-btn" data-n="${stop.n}">🧭 Naviga</button>
+          <button class="btn btn-secondary map-btn" data-n="${stop.n}">📍 Sulla mappa</button>
+        </div>
+      </div>
+    `;
+    card.querySelector('.stop-header').addEventListener('click', (e) => {
+      if (e.target.closest('.btn')) return;
+      card.classList.toggle('open');
+    });
+    card.querySelector('.play-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlay(stop);
+    });
+    card.querySelector('.navigate-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openInMaps(stop);
+    });
+    card.querySelector('.map-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      map.setView(stop.coords, 17, { animate: true });
+      const idx = STOPS.findIndex(s => s.n === stop.n);
+      if (idx >= 0 && markers[idx]) markers[idx].openPopup();
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    list.appendChild(card);
+  });
+}
+
+document.querySelectorAll('.section-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentSection = tab.dataset.section;
+    renderStops();
+  });
+});
+
+function togglePlay(stop) {
+  if (currentlyPlaying === stop.n) { stopSpeech(); return; }
+  stopSpeech();
+  startSpeech(stop);
+}
+
+function startSpeech(stop) {
+  if (!synth) {
+    alert('Il tuo browser non supporta la lettura vocale. Prova con Safari su iPhone.');
+    return;
+  }
+  let text = stop.intro + '. ' + stop.text;
+  text = optimizeForTTS(text);
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'it-IT';
+  utter.rate = currentRate;
+  utter.pitch = 1.0;
+  if (italianVoice) utter.voice = italianVoice;
+  utter.onstart = () => {
+    currentlyPlaying = stop.n;
+    updatePlayUI(stop, true);
+    showFloatingPlayer(stop);
+  };
+  utter.onend = () => {
+    currentlyPlaying = null;
+    updatePlayUI(stop, false);
+    hideFloatingPlayer();
+  };
+  utter.onerror = utter.onend;
+  currentUtterance = utter;
+  synth.speak(utter);
+}
+
+function optimizeForTTS(text) {
+  const replacements = [
+    // Polish proper names → phonetic Italian
+    [/\bGdańsk Główny\b/g, 'Gdansk Gluvni'],
+    [/\bGdańsk\b/g, 'Gdansk'],
+    [/\bMotława\b/g, 'Motuàva'],
+    [/\bSolidarność\b/g, 'Solidarnoshch'],
+    [/\bDługa\b/g, 'Dùuga'],
+    [/\bDługi Targ\b/g, 'Dùughi Tark'],
+    [/\bDługie Pobrzeże\b/g, 'Dùughie Pobgéje'],
+    [/\bBrama Wyżynna\b/g, 'Brama Vìjynna'],
+    [/\bWyżynna\b/g, 'Vìjynna'],
+    [/\bZłota Brama\b/g, 'Zuota Brama'],
+    [/\bZłota Woda\b/g, 'Zuota Voda'],
+    [/\bZielona Brama\b/g, 'Zielona Brama'],
+    [/\bDwór Artusa\b/g, 'Dvur Artusa'],
+    [/\bRatusz Głównego Miasta\b/g, 'Ratush Gluvnego Miasta'],
+    [/\bRatusz\b/g, 'Ratush'],
+    [/\bŻuraw\b/g, 'Jurav'],
+    [/\bUlica\b/g, 'Ulitsa'],
+    [/\bMariacka\b/g, 'Mariatska'],
+    [/\bMariacki\b/g, 'Mariatski'],
+    [/\bBazylika Mariacka\b/g, 'Bazilika Mariatska'],
+    [/\bWartka\b/g, 'Vartka'],
+    [/\bprzedproża\b/g, 'pscedproja'],
+    [/\bprzedproże\b/g, 'pscedproje'],
+    [/\bLech Wałęsa\b/g, 'Lech Vauensa'],
+    [/\bWałęsa\b/g, 'Vauensa'],
+    [/\bAnna Walentynowicz\b/g, 'Anna Valentinòvich'],
+    [/\bKazimierz Czwarto\b/g, 'Kazimierg Cvarto'],
+    [/\bSigismondo Augusto\b/g, 'Sigismondo Augusto'],
+    [/\bJagellone\b/g, 'Iaghellone'],
+    [/\bAlbert Forster\b/g, 'Albert Forster'],
+    [/\bIsaac van den Blocke\b/g, 'Isaac van den Blok'],
+    [/\bAbraham van den Block\b/g, 'Abraham van den Blok'],
+    [/\bHans Düringer\b/g, 'Hans Diuringher'],
+    [/\bHans Memling\b/g, 'Hans Memling'],
+    [/\bAmbrosius Vermöllen\b/g, 'Ambrosius Vermèllen'],
+    [/\bGeorg Stelzener\b/g, 'Gheòrg Stèltsener'],
+    [/\bPeter Husen\b/g, 'Peter Husen'],
+    [/\bPieter Ringering\b/g, 'Pieter Ringuering'],
+    [/\bJohann Rogge\b/g, 'Iohann Roghe'],
+    [/\bHans Kramer\b/g, 'Hans Kramer'],
+    [/\bGoldwasser\b/g, 'Goldvasser'],
+    [/\bBacksteingotik\b/g, 'Bakstaingotik'],
+    [/\bgauleiter\b/g, 'gàulaiter'],
+    [/\bCeaușescu\b/g, 'Ceausescu'],
+    [/\bOliwa\b/g, 'Oliva'],
+    [/\bPomerania\b/g, 'Pomerania'],
+    [/\bWisła\b/g, 'Visua'],
+    [/\bVistola\b/g, 'Vìstola'],
+    [/\bForster\b/g, 'Forster'],
+    [/\bWałęsa\b/g, 'Vauensa'],
+    // Pause hints
+    [/\n\n/g, '. ... '],
+    [/\n/g, '. '],
+  ];
+  let optimized = text;
+  for (const [pattern, replacement] of replacements) {
+    optimized = optimized.replace(pattern, replacement);
+  }
+  return optimized;
+}
+
+function stopSpeech() {
+  if (synth) synth.cancel();
+  if (currentlyPlaying) {
+    const stop = STOPS.find(s => s.n === currentlyPlaying);
+    if (stop) updatePlayUI(stop, false);
+  }
+  currentlyPlaying = null;
+  hideFloatingPlayer();
+}
+
+function updatePlayUI(stop, playing) {
+  document.querySelectorAll('.play-btn').forEach(btn => {
+    if (btn.dataset.n == stop.n) {
+      const icon = btn.querySelector('.play-icon');
+      const label = btn.querySelector('.play-label');
+      if (playing) {
+        btn.classList.add('playing');
+        icon.textContent = '⏸';
+        label.textContent = 'Ferma';
+      } else {
+        btn.classList.remove('playing');
+        icon.textContent = '▶';
+        label.textContent = 'Ascolta';
+      }
+    } else {
+      btn.classList.remove('playing');
+      btn.querySelector('.play-icon').textContent = '▶';
+      btn.querySelector('.play-label').textContent = 'Ascolta';
+    }
+  });
+}
+
+function showFloatingPlayer(stop) {
+  const fp = document.getElementById('floatingPlayer');
+  fp.classList.add('show');
+  document.getElementById('fpTitle').textContent = stop.n + '. ' + stop.title;
+}
+
+function hideFloatingPlayer() {
+  document.getElementById('floatingPlayer').classList.remove('show');
+}
+
+let isPaused = false;
+document.getElementById('fpPause').addEventListener('click', () => {
+  if (!synth) return;
+  if (isPaused) {
+    synth.resume();
+    document.getElementById('fpPause').textContent = '⏸';
+    isPaused = false;
+  } else {
+    synth.pause();
+    document.getElementById('fpPause').textContent = '▶';
+    isPaused = true;
+  }
+});
+
+document.getElementById('fpStop').addEventListener('click', () => stopSpeech());
+
+// =====================================================
+// GEOLOCATION & NAVIGATION
+// =====================================================
+let userMarker = null;
+let userAccuracyCircle = null;
+let watchId = null;
+let lastNotifiedStop = null;
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function openInMaps(stop) {
+  const [lat, lng] = stop.coords;
+  const name = encodeURIComponent(stop.n + '. ' + stop.title + ', Gdańsk');
+  if (isIOS()) {
+    const url = `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w&q=${name}`;
+    window.location.href = url;
+    setTimeout(() => {
+      window.open(`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w&q=${name}`, '_blank');
+    }, 500);
+  } else {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+    window.open(url, '_blank');
+  }
+}
+
+function distanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+function updateUserPosition(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  const acc = pos.coords.accuracy;
+  const userIcon = L.divIcon({
+    className: '',
+    html: `<div style="width: 18px; height: 18px; background: #2563EB; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);"></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+  if (userMarker) {
+    userMarker.setLatLng([lat, lng]);
+    userAccuracyCircle.setLatLng([lat, lng]);
+    userAccuracyCircle.setRadius(acc);
+  } else {
+    userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+    userAccuracyCircle = L.circle([lat, lng], {
+      radius: acc, color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.10, weight: 1
+    }).addTo(map);
+  }
+  STOPS.forEach(stop => {
+    const dist = distanceMeters(lat, lng, stop.coords[0], stop.coords[1]);
+    const el = document.querySelector(`.distance[data-n="${stop.n}"]`);
+    if (el) {
+      el.textContent = dist < 1000 ? Math.round(dist) + ' m' : (dist/1000).toFixed(1) + ' km';
+    }
+  });
+  let nearest = null, nearestDist = Infinity;
+  STOPS.forEach(stop => {
+    const d = distanceMeters(lat, lng, stop.coords[0], stop.coords[1]);
+    if (d < nearestDist) { nearestDist = d; nearest = stop; }
+  });
+  if (nearest && nearestDist < 50 && lastNotifiedStop !== nearest.n) {
+    lastNotifiedStop = nearest.n;
+    showProximityToast(nearest);
+    const card = document.querySelector(`[data-stop="${nearest.n}"]`);
+    if (card && !card.classList.contains('open')) {
+      card.classList.add('open');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else if (nearestDist > 100) {
+    lastNotifiedStop = null;
+  }
+}
+
+function showProximityToast(stop) {
+  const existing = document.getElementById('proximityToast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'proximityToast';
+  toast.style.cssText = `
+    position: fixed; top: calc(var(--safe-top) + 70px); left: 12px; right: 12px;
+    background: var(--gold); color: white; padding: 14px 18px;
+    border-radius: 12px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(182, 143, 64, 0.4); z-index: 300;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    animation: slideDown 0.3s ease-out;
+  `;
+  toast.innerHTML = `
+    <div style="font-size: 22px;">📍</div>
+    <div style="flex: 1;">
+      <div style="font-size: 11px; opacity: 0.85; letter-spacing: 1px; text-transform: uppercase;">Sei arrivato</div>
+      <div>${stop.n}. ${stop.title}</div>
+      <div style="font-size: 11px; font-weight: 400; opacity: 0.85; margin-top: 2px;">Tocca per ascoltare</div>
+    </div>
+    <div style="font-size: 18px;">▶</div>
+  `;
+  toast.addEventListener('click', () => {
+    toast.remove();
+    togglePlay(stop);
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.style.opacity = '0'; }, 8000);
+  setTimeout(() => toast.remove(), 9000);
+}
+
+function startGeolocation() {
+  if (!navigator.geolocation) {
+    alert('Geolocalizzazione non disponibile su questo dispositivo.');
+    return;
+  }
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    if (userAccuracyCircle) { map.removeLayer(userAccuracyCircle); userAccuracyCircle = null; }
+    document.getElementById('locateBtn').style.background = 'rgba(255,255,255,0.10)';
+    return;
+  }
+  document.getElementById('locateBtn').style.background = 'var(--gold)';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      updateUserPosition(pos);
+      map.setView([pos.coords.latitude, pos.coords.longitude], 16, { animate: true });
+    },
+    err => {
+      alert('Impossibile ottenere la posizione. Verifica che la geolocalizzazione sia attiva nelle impostazioni di Safari (Impostazioni → Safari → Posizione).');
+      document.getElementById('locateBtn').style.background = 'rgba(255,255,255,0.10)';
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+  watchId = navigator.geolocation.watchPosition(
+    updateUserPosition,
+    err => console.warn('Geo error:', err),
+    { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
+  );
+}
+
+document.getElementById('locateBtn').addEventListener('click', startGeolocation);
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+`;
+document.head.appendChild(style);
+
+window.addEventListener('load', () => {
+  initMap();
+  renderStops();
+});
+</script>
+</body>
+</html>

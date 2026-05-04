@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cracovia">
+<title>Cracovia · Tour audio</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --navy: #1B2A4E;
+  --gold: #B68F40;
+  --gold-soft: #E8D9B8;
+  --cream: #FAF7F0;
+  --cream-2: #F1ECE0;
+  --text: #1B2A4E;
+  --muted: #6B7280;
+  --shadow: 0 8px 28px rgba(27, 42, 78, 0.10);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bot: env(safe-area-inset-bottom);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* === HEADER === */
+header {
+  background: var(--navy);
+  color: var(--cream);
+  padding: calc(var(--safe-top) + 12px) 18px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+.head-row { display: flex; justify-content: space-between; align-items: center; }
+.head-title { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 22px; letter-spacing: 0.5px; }
+.head-sub { color: var(--gold-soft); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+.head-counter { background: rgba(255,255,255,0.10); border-radius: 14px; padding: 6px 12px; font-size: 12px; font-weight: 600; }
+
+/* === SECTION TABS === */
+.section-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--cream-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: calc(var(--safe-top) + 56px);
+  z-index: 90;
+}
+.section-tabs::-webkit-scrollbar { display: none; }
+.section-tab {
+  flex: 0 0 auto;
+  background: white;
+  border: 1px solid #E5DDC8;
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.section-tab.active {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+
+/* === MAP === */
+#map {
+  width: 100%;
+  height: 38vh;
+  min-height: 250px;
+  background: #DCE3EC;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  font-family: -apple-system, sans-serif;
+}
+.leaflet-popup-content {
+  font-size: 13px;
+  margin: 10px 14px;
+}
+.numbered-marker {
+  background: var(--navy);
+  color: white;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: Georgia, serif;
+}
+.numbered-marker.celebration {
+  background: var(--gold);
+}
+.numbered-marker.active {
+  background: #C0392B;
+  transform: scale(1.25);
+}
+
+/* === STOPS LIST === */
+.stops-list {
+  padding: 14px 14px calc(var(--safe-bot) + 100px);
+}
+.stop-card {
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid #EFE9D9;
+}
+.stop-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  gap: 14px;
+}
+.stop-num {
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 18px;
+}
+.stop-num.celebration {
+  background: var(--gold);
+}
+.stop-info { flex: 1; min-width: 0; }
+.stop-title {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  color: var(--navy);
+  font-weight: 600;
+  margin-bottom: 2px;
+  line-height: 1.25;
+}
+.stop-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.stop-meta span::before {
+  content: "•";
+  margin-right: 6px;
+  color: var(--gold);
+}
+.stop-meta span:first-child::before { content: ""; margin: 0; }
+
+.expand-icon {
+  flex: 0 0 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.stop-card.open .expand-icon { transform: rotate(180deg); }
+
+.stop-body {
+  display: none;
+  padding: 0 18px 18px;
+}
+.stop-card.open .stop-body { display: block; }
+
+.stop-body p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.stop-body p.intro {
+  font-style: italic;
+  color: var(--gold);
+  font-size: 13.5px;
+  border-left: 2px solid var(--gold);
+  padding-left: 12px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.stop-body p strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.stop-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-primary {
+  background: var(--navy);
+  color: white;
+}
+.btn-primary.playing {
+  background: #C0392B;
+}
+.btn-secondary {
+  background: var(--cream-2);
+  color: var(--navy);
+  border: 1px solid #E5DDC8;
+}
+.btn:active { opacity: 0.85; }
+
+/* === FLOATING PLAYER === */
+.floating-player {
+  position: fixed;
+  bottom: calc(var(--safe-bot) + 12px);
+  left: 12px;
+  right: 12px;
+  background: var(--navy);
+  color: white;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 30px rgba(27, 42, 78, 0.40);
+  z-index: 200;
+}
+.floating-player.show { display: flex; }
+.fp-info { flex: 1; min-width: 0; }
+.fp-label { font-size: 10px; letter-spacing: 1.5px; color: var(--gold-soft); text-transform: uppercase; }
+.fp-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fp-controls { display: flex; gap: 8px; }
+.fp-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+.fp-btn.main {
+  background: var(--gold);
+}
+
+/* === ONBOARDING === */
+.onboarding {
+  position: fixed;
+  inset: 0;
+  background: var(--cream);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 28px;
+  text-align: center;
+}
+.onboarding.hidden { display: none; }
+.ob-label {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ob-title {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 42px;
+  color: var(--navy);
+  margin-bottom: 12px;
+  line-height: 1.05;
+}
+.ob-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  font-style: italic;
+}
+.ob-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  max-width: 340px;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.ob-card strong { color: var(--navy); }
+.ob-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+  margin: 20px auto;
+}
+.ob-btn {
+  background: var(--navy);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* === FOOTER === */
+.footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 18px;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<!-- Onboarding -->
+<div class="onboarding" id="onboarding">
+  <div class="ob-label">Per il sessantesimo</div>
+  <div class="ob-title">Cracovia</div>
+  <div class="ob-sub">— una giornata, raccontata —</div>
+
+  <div class="ob-card">
+    <strong>14 tappe</strong> divise in tre sezioni:<br>
+    Wawel · Città Vecchia · Kazimierz<br>
+    <br>
+    Tocca una tappa per <strong>aprirla</strong>, poi <strong>"Ascolta"</strong> per sentire la narrazione.
+  </div>
+
+  <div class="ob-card" style="background: #FFF8E7; border: 1px solid var(--gold);">
+    <strong style="color: var(--gold);">⚙️ Per la migliore qualità audio</strong><br>
+    <br>
+    Una volta sola, prima del viaggio, scarica la voce italiana premium su iPhone:<br>
+    <br>
+    <strong>Impostazioni → Accessibilità → Contenuto letto → Voci → Italiano</strong><br>
+    <br>
+    Cerca <strong>"Federica (Premium)"</strong> o <strong>"Alice (Premium/Enhanced)"</strong> e tocca per scaricarla. Sono ~100 MB, una volta sola.<br>
+    <br>
+    <em>Senza voce premium funziona comunque, ma il suono è più meccanico. Auricolari consigliati nei luoghi affollati.</em>
+  </div>
+
+  <button class="ob-btn" id="startBtn">Comincia il tour</button>
+  <div class="ob-divider"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="head-row">
+    <div>
+      <div class="head-title">Cracovia</div>
+      <div class="head-sub">Tour audio · Domenica 10 maggio</div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="locateBtn" style="background: rgba(255,255,255,0.10); border: none; color: white; width: 32px; height: 32px; border-radius: 16px; font-size: 14px; cursor: pointer;" title="Dove sono">📍</button>
+      <button id="settingsBtn" style="background: rgba(255,255,255,0.10); border: none; color: white; width: 32px; height: 32px; border-radius: 16px; font-size: 16px; cursor: pointer;">⚙</button>
+      <div class="head-counter" id="counter">14 tappe</div>
+    </div>
+  </div>
+</header>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel" style="display: none; background: white; padding: 16px 18px; border-bottom: 1px solid #E5DDC8; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+  <div style="font-family: Georgia, serif; font-size: 15px; color: var(--navy); font-weight: 600; margin-bottom: 10px;">Voce narrante</div>
+  <select id="voiceSelect" style="width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #E5DDC8; border-radius: 8px; background: white; color: var(--text); margin-bottom: 10px;"></select>
+  <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+    <label style="font-size: 13px; color: var(--muted); flex: 0 0 70px;">Velocità</label>
+    <input type="range" id="rateSlider" min="0.7" max="1.3" step="0.05" value="0.92" style="flex: 1; accent-color: var(--gold);">
+    <span id="rateValue" style="font-size: 12px; color: var(--muted); min-width: 32px; text-align: right;">0.92</span>
+  </div>
+  <button id="testVoiceBtn" style="background: var(--gold); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; width: 100%;">▶ Prova la voce</button>
+  <div style="font-size: 11px; color: var(--muted); font-style: italic; margin-top: 8px; line-height: 1.4;">Le voci con "Premium" o "Enhanced" sono di qualità superiore. Se non le vedi, scaricale da Impostazioni → Accessibilità → Contenuto letto → Voci → Italiano.</div>
+</div>
+
+<!-- SECTION TABS -->
+<div class="section-tabs">
+  <div class="section-tab active" data-section="all">Tutto</div>
+  <div class="section-tab" data-section="wawel">Wawel</div>
+  <div class="section-tab" data-section="oldtown">Città Vecchia</div>
+  <div class="section-tab" data-section="kazimierz">Kazimierz</div>
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- STOPS LIST -->
+<div class="stops-list" id="stopsList"></div>
+
+<!-- FLOATING PLAYER -->
+<div class="floating-player" id="floatingPlayer">
+  <div class="fp-info">
+    <div class="fp-label">In riproduzione</div>
+    <div class="fp-title" id="fpTitle">—</div>
+  </div>
+  <div class="fp-controls">
+    <button class="fp-btn" id="fpPause">⏸</button>
+    <button class="fp-btn main" id="fpStop">⏹</button>
+  </div>
+</div>
+
+<div class="footer-note">Buon compleanno Francesca · Con amore, Stefano</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// =====================================================
+// TOUR DATA – 14 stops with full narration
+// =====================================================
+const STOPS = [
+  // === WAWEL (1-4) ===
+  {
+    n: 1, section: "wawel", icon: "🏰",
+    title: "Statua del Drago di Wawel",
+    subtitle: "Smok Wawelski",
+    duration: "3 min",
+    walking: "Inizio",
+    coords: [50.0530183, 19.9335845],
+    intro: "Iniziamo dove tutto comincia per i bambini polacchi: dal drago.",
+    text: `La leggenda racconta che molto tempo fa, sotto questa collina del Wawel, viveva un drago feroce. Divorava bestiame, fanciulle, e terrorizzava la città. Re Krak, il fondatore mitico di Cracovia, promise la mano della figlia a chiunque uccidesse il mostro.
+
+I cavalieri provarono, fallirono, morirono. Finché un giovane apprendista calzolaio, Skuba, ebbe un'idea diversa. Riempì una pelle di pecora con zolfo e la lasciò davanti alla tana. Il drago la divorò avido, e la sete lo arse. Bevve dalla Vistola, bevve, bevve, finché non scoppiò.
+
+La statua di bronzo che vedete sputa fiamme vere ogni cinque minuti — opera dello scultore Bronisław Chromy, qui dal 1972. Non è solo una favola per turisti. Per i polacchi è memoria di un re fondatore, di un giovane povero che batte il potere con l'astuzia, e della Vistola che attraversa la nostra città. La storia di Cracovia comincia qui, ai piedi del drago.
+
+Sopra di noi, sulla collina, mille anni di Polonia. Saliamo.`
+  },
+  {
+    n: 2, section: "wawel", icon: "👑",
+    title: "Castello Reale del Wawel",
+    subtitle: "Zamek Królewski",
+    duration: "4 min",
+    walking: "5 min a piedi",
+    coords: [50.0541115, 19.935423],
+    intro: "Il cuore politico della Polonia per cinque secoli.",
+    text: `Siamo nel cortile rinascimentale del Castello Reale del Wawel, e questa è la collina più importante di tutta la Polonia. Qui, dall'undicesimo secolo fino alla fine del Cinquecento, sono stati incoronati e sepolti i re polacchi.
+
+Quello che vedete è in larga parte opera di Sigismondo il Vecchio, che nel 1507 chiamò architetti italiani — Francesco Fiorentino, Bartolomeo Berrecci, Giovanni Maria Padovano — e trasformò l'antico castello gotico in una delle prime residenze rinascimentali a nord delle Alpi. Notate il loggiato a tre ordini di archi: è italiano, puro Cinquecento, ma realizzato a quattrocento chilometri da Firenze.
+
+Quando Sigismondo Augusto, suo figlio, sposò Bona Sforza nel 1518, la sposa milanese portò a Cracovia non solo la dote, ma anche cuochi, giardinieri, ortaggi italiani — pomodori, prezzemolo, sedano. Le verdure miste della cucina polacca si chiamano ancora oggi "włoszczyzna", parola che significa "roba italiana".
+
+Nel 1596 il re Sigismondo III spostò la capitale a Varsavia. Il Wawel rimase il luogo delle incoronazioni e delle sepolture, ma perse il ruolo di sede del potere. Durante l'occupazione nazista, Hans Frank, governatore generale, prese il castello come sua residenza. Gli arazzi reali furono salvati portandoli avventurosamente in Canada, e tornarono solo nel 1961.
+
+Oggi il castello è il luogo simbolo dell'identità polacca. Non c'è polacco che non l'abbia visitato almeno una volta nella vita.`
+  },
+  {
+    n: 3, section: "wawel", icon: "⛪",
+    title: "Cattedrale del Wawel",
+    subtitle: "Katedra Wawelska",
+    duration: "4 min",
+    walking: "1 min",
+    coords: [50.0546371, 19.9354684],
+    intro: "Il pantheon della Polonia.",
+    text: `Eccoci alla Cattedrale del Wawel — per i polacchi, semplicemente "la Cattedrale". Quella che vedete è la terza chiesa costruita su questo luogo: la prima del 1020, la seconda del 1142, l'attuale consacrata nel 1364.
+
+Qui sono stati incoronati trentasette re polacchi. Qui sono sepolti diciotto sovrani, quattro santi, alcuni eroi nazionali, e perfino, in un momento controverso del 2010, il presidente Lech Kaczyński con la moglie, dopo l'incidente aereo di Smolensk.
+
+La facciata che vedete è un mosaico di epoche: romanico, gotico, barocco, le ventidue cappelle aggiunte nei secoli da diverse dinastie. Quella d'oro che brilla, sulla destra, è la Cappella di Sigismondo del 1533: la considerano il più puro capolavoro rinascimentale a nord delle Alpi, opera di Bartolomeo Berrecci da Pontassieve. Una piccola Toscana fiorentina, qui in Polonia.
+
+Ma c'è una persona che, per i polacchi del Novecento, ha fatto di questa cattedrale un luogo personale: Karol Wojtyła. Qui, il primo novembre 1946, fu ordinato sacerdote. Qui, il ventotto settembre 1958, fu consacrato vescovo, a soli trentotto anni. E qui tornava ogni volta, da papa Giovanni Paolo Secondo, quando visitava la Polonia. Diceva: "ovunque io sia, una parte di me resta a Cracovia".
+
+All'ingresso noterete tre grandi ossa appese: secondo la leggenda, sono ossa del drago di Wawel. In realtà sono di un mammut, di una balena, di un rinoceronte lanoso, trovate qui durante scavi medievali. Si dice che finché resteranno appese, il mondo non finirà. È un buon pensiero.`
+  },
+  {
+    n: 4, section: "wawel", icon: "🌹",
+    title: "Via Kanonicza",
+    subtitle: "Ulica Kanonicza",
+    duration: "3 min",
+    walking: "5 min in discesa",
+    coords: [50.0566374, 19.9375489],
+    intro: "La via medievale più antica della città. Casa nostra, oggi.",
+    text: `Stiamo percorrendo via Kanonicza, la più antica strada di Cracovia. Esisteva già nel tredicesimo secolo, quando collegava la cattedrale del Wawel al cuore della città. Il nome viene dai canonici della cattedrale che qui avevano le loro case capitolari.
+
+Guardate i palazzi: ognuno è stato la residenza di un canonico, di un vescovo, di un cardinale. Sono tutti del Quattrocento e Cinquecento, in stile rinascimentale italianeggiante, alcuni con cortili interni a due piani di logge.
+
+Al numero diciannove, sulla destra, vedete la casa di Jan Długosz, lo storiografo medievale, autore degli "Annales" della Polonia, padre della storiografia polacca. Al numero ventuno, una casa che ospitò il giovane sacerdote Karol Wojtyła per dieci anni, dal 1958 al 1967, prima che diventasse arcivescovo. Oggi è il Museo Arcidiocesano dedicato a lui.
+
+Al numero sedici, dove dormiremo questa notte, c'è il nostro Hotel Copernicus. È una casa rinascimentale del Trecento, restaurata con pazienza nel 1996, e dal 2000 è il primo hotel della Polonia ammesso a Relais & Châteaux. Nel libro degli ospiti hanno firmato Czesław Miłosz, Wisława Szymborska — i due Nobel polacchi della letteratura — e Václav Havel, Helmut Kohl, Morgan Freeman.
+
+Più avanti, al numero ventidue, è dove ceneremo stasera. Pod Nosem, una stella Michelin. Una via, due luoghi nostri. Mi piace l'idea che il nostro compleanno si concentri tutto in cinquanta metri di pavé.`
+  },
+
+  // === OLD TOWN (5-9) ===
+  {
+    n: 5, section: "oldtown", icon: "⛪",
+    title: "Chiesa dei Santi Pietro e Paolo",
+    subtitle: "Kościół Świętych Apostołów Piotra i Pawła",
+    duration: "3 min",
+    walking: "3 min",
+    coords: [50.0569321, 19.9387855],
+    intro: "Il primo barocco della Polonia.",
+    text: `Questa chiesa è una nostra vecchia conoscenza italiana. Costruita tra il 1597 e il 1619 per i Gesuiti, è il primo edificio barocco mai costruito in Polonia. L'architetto era Giovanni Maria Bernardoni, gesuita italiano, e si ispirò esplicitamente alla Chiesa del Gesù a Roma — la chiesa madre dei Gesuiti.
+
+Davanti alla cancellata, lungo via Grodzka, vedete dodici statue: sono i dodici apostoli, scolpiti nel 1715 in arenaria locale. Quelli attuali sono copie ottocentesche, gli originali sono al Museo Nazionale, ma l'effetto è lo stesso: una processione di pietra che vi accoglie.
+
+Dentro, la pianta è a croce latina con cupola — molto romana, molto Controriforma. Ma c'è un dettaglio scientifico interessante: dal 1949, sotto la cupola, è appeso un pendolo di Foucault, lungo quarantasei metri e mezzo. È uno dei più lunghi del mondo, e dimostra fisicamente la rotazione terrestre. L'ho saputo solo preparando questo viaggio.
+
+L'acustica della chiesa è eccezionale, e oggi spesso vi si tengono concerti barocchi. Se passiamo di sera e c'è un concerto in cartellone, vale la pena entrare.`
+  },
+  {
+    n: 6, section: "oldtown", icon: "🏛️",
+    title: "Rynek Główny – la Piazza del Mercato",
+    subtitle: "Il cuore dell'Europa medievale",
+    duration: "4 min",
+    walking: "4 min",
+    coords: [50.0618971, 19.936756],
+    intro: "Duecento metri per duecento metri di storia.",
+    text: `Eccoci nella Piazza del Mercato di Cracovia — Rynek Główny. Duecento metri per duecento metri, è la più grande piazza medievale d'Europa, esattamente come fu progettata nel 1257.
+
+Quella data conta. Nel 1241 i Mongoli avevano raso al suolo la vecchia città. Nel 1257, dopo la ricostruzione, il duca Boleslao il Casto concesse a Cracovia il diritto di Magdeburgo: una carta urbanistica importata dalla Germania che imponeva una griglia regolare con una piazza centrale grande, simmetrica, regolatrice del traffico commerciale. Quello che vedete è quella griglia, ancora intatta dopo settecentosessantotto anni.
+
+Sotto i nostri piedi, dieci metri sotto il selciato, c'è la "Cracovia Sotterranea" — un museo aperto nel 2010, dentro le strutture archeologiche medievali emerse durante i restauri della piazza. Banchi del Trecento, oggetti di vita quotidiana, scheletri, monete. Cracovia esiste a strati, come Roma.
+
+Nel 1364 il re Casimiro il Grande fondò qui l'Accademia di Cracovia, oggi Università Jagellonica: la seconda più antica dell'Europa centrale, dopo Praga. Tra i suoi studenti, nel 1491, un giovane di Toruń che studiò matematica e astronomia: Mikołaj Kopernik. Il suo nome italianizzato lo conoscete: Niccolò Copernico. È vissuto qui, ha studiato qui, prima di rivoluzionare l'astronomia.
+
+Guardate intorno. La torre alta che vedete è il Municipio. Il lungo edificio centrale è il Mercato dei Drappi. La grande chiesa con due torri asimmetriche è la Basilica di Santa Maria. Tre tappe nostre, in ordine. Cominciamo.`
+  },
+  {
+    n: 7, section: "oldtown", icon: "🎺",
+    title: "Basilica di Santa Maria",
+    subtitle: "Bazylika Mariacka",
+    duration: "4 min",
+    walking: "1 min",
+    coords: [50.0616411, 19.9393903],
+    intro: "Le due torri, l'altare di Stoss, e la tromba interrotta.",
+    text: `La Basilica di Santa Maria. Costruita fra il tredicesimo e il quindicesimo secolo, gotica in mattoni — il "Backsteingotik" tipico del nord Europa. Le due torri non sono uguali e non per errore.
+
+Quella di sinistra, alta ottantadue metri, è la torre civica, di guardia. Quella di destra, alta sessantanove metri, è la torre delle campane. La leggenda racconta che furono costruite da due fratelli, e quello più giovane invidiò il fratello maggiore al punto da ucciderlo per impedirgli di finire la torre più alta. Poi, divorato dal rimorso, si suicidò gettandosi dalla sua stessa torre. Il coltello con cui uccise il fratello sarebbe quello appeso ancora oggi nella sala del Mercato dei Drappi. Probabilmente non è vero, ma è una bella storia.
+
+Dalla torre alta, ogni ora, suona l'hejnał Mariacki — un richiamo di tromba di cinque note che si interrompe bruscamente. Si interrompe perché, secondo la tradizione, durante l'invasione mongola del 1241 il trombettiere stava avvisando la città quando una freccia tartara gli trafisse la gola, troncando la melodia a metà. Da allora, ogni ora di ogni giorno, l'hejnał si interrompe nello stesso punto, in onore di quel trombettiere. Quattro volte ogni ora il trombettiere si affaccia ai quattro punti cardinali. A mezzogiorno, l'hejnał è trasmesso in diretta dalla radio nazionale polacca. Da settant'anni, ininterrottamente.
+
+Dentro, c'è il pezzo. L'altare maggiore è opera di Veit Stoss — Wit Stwosz in polacco — un maestro tedesco di Norimberga che lavorò qui per dodici anni, dal 1477 al 1489. È il più grande altare gotico in legno del mondo: dodici metri di altezza, undici di larghezza. Le figure scolpite sono a grandezza naturale, dipinte e dorate, e raccontano la vita di Maria. Le mani, i visi, i panneggi: ogni dettaglio è virtuosismo puro.
+
+Durante la guerra, i nazisti smontarono l'altare e lo portarono in Baviera. Fu ritrovato nel 1946 in un castello a Norimberga, in un sotterraneo allagato. Restaurato, tornò qui nel 1957. È uno dei pochi capolavori salvati dalla razzia tedesca.
+
+Il soffitto stellato blu cobalto è ottocentesco, opera di Jan Matejko, il pittore nazionale polacco. Mille e mille stelle dorate su fondo notturno, come a guardare il cielo del primo cristianesimo.`
+  },
+  {
+    n: 8, section: "oldtown", icon: "🛍️",
+    title: "Sukiennice – il Mercato dei Drappi",
+    subtitle: "Le botteghe e la galleria",
+    duration: "3 min",
+    walking: "1 min",
+    coords: [50.0617132, 19.9373488],
+    intro: "Il mercato che dura da settecento anni.",
+    text: `Stiamo davanti al Sukiennice, il Mercato dei Drappi. Letteralmente, "il luogo dei panni di lana". È stato il centro del commercio internazionale della Cracovia medievale.
+
+Costruito nel quattordicesimo secolo, distrutto da un incendio nel 1555, ricostruito dall'architetto Giovanni il Mosca — un altro italiano — nel suo splendore rinascimentale che vediamo oggi. Le grandi mascheronere scolpite sopra il portico sono opera di Santi Gucci da Firenze, scultore alla corte di Sigismondo Augusto.
+
+Per cinque secoli si commerciavano qui le lane fiamminghe, le sete italiane, le spezie del Levante, le pellicce della Russia. Cracovia era un nodo della Via dell'Ambra, la rotta commerciale che dal Baltico portava alle città italiane.
+
+Oggi, al pian terreno, ci sono cinquanta botteghe. Si vende ambra del Baltico — vera, ma controllate sempre il certificato — argento di Cracovia, scacchi in legno, scatole laccate, abiti tradizionali, e qualche kitsch turistico. È bello camminare attraverso, lentamente, anche solo guardando.
+
+Al primo piano c'è la Galleria di Arte Polacca dell'Ottocento, parte del Museo Nazionale. Vi si trovano i grandi pittori polacchi: Jan Matejko con i suoi quadri storici monumentali, Józef Chełmoński con i suoi paesaggi, Jacek Malczewski con i suoi simbolismi. Se avete due ore, vale la pena.`
+  },
+  {
+    n: 9, section: "oldtown", icon: "🚪",
+    title: "Porta Floriana e Barbacane",
+    subtitle: "L'antica entrata della città",
+    duration: "3 min",
+    walking: "8 min — direzione nord",
+    coords: [50.0648602, 19.9413951],
+    intro: "Dove i re entravano a Cracovia.",
+    text: `Camminiamo lungo via Floriańska, la più elegante strada commerciale di Cracovia. Per secoli questa via è stata la "Strada Reale": ogni nuovo sovrano polacco la percorreva a cavallo dalla Porta Floriana fino al Wawel per essere incoronato.
+
+La Porta Floriana, davanti a voi, è del 1307. È l'unica delle otto porte medievali di Cracovia rimasta in piedi. Le altre furono demolite nell'Ottocento per costruire i Planty, l'anello verde che oggi circonda la Città Vecchia. Sopra la porta vedete uno stemma con un'aquila: è l'aquila Piast, simbolo della prima dinastia polacca.
+
+Dietro alla porta — usciamo un attimo all'esterno — c'è il Barbacane, una rotonda fortificata costruita nel 1498 contro la minaccia turca. È la fortificazione difensiva meglio conservata in Europa. Solo tre simili sono giunti integri fino a noi: questo, quello di Carcassonne, quello di Varsavia. È spesso tre metri, con sette torrette, settantatre feritoie da arciere. Una macchina di guerra, ben fatta.
+
+Tra Porta Floriana e Barbacane c'era un ponte levatoio sul fossato della città. Nessun nemico è mai riuscito a entrare in Cracovia da qui. La città fu presa solo dall'inganno o dalla resa, mai dall'assalto frontale.
+
+Stiamo per allontanarci dal centro. Ora ci dirigiamo a sud-est, verso un quartiere completamente diverso: Kazimierz, il quartiere ebraico.`
+  },
+
+  // === KAZIMIERZ (10-14) ===
+  {
+    n: 10, section: "kazimierz", icon: "✡️",
+    title: "Kazimierz – l'arrivo",
+    subtitle: "Cinquecento anni di storia ebraica",
+    duration: "3 min",
+    walking: "20 min a piedi (o 8 min in taxi)",
+    coords: [50.0518711, 19.9446205],
+    intro: "Una città dentro la città. Una storia luminosa, e una catastrofe.",
+    text: `Siamo entrati a Kazimierz. Un tempo era un comune autonomo, fondato nel 1335 dal re Casimiro il Grande — da cui prende il nome — e separato da Cracovia dalle acque della Vistola. Solo nel 1791 fu unito alla città.
+
+Per cinquecento anni, dal 1495 al 1939, questo quartiere è stato il cuore della vita ebraica polacca. Quando i re polacchi cacciavano gli ebrei, accoglievano ebrei. Quando l'Europa occidentale li perseguitava, la Polonia li proteggeva. La Polonia divenne, per oltre tre secoli, il "Paradiso degli Ebrei" — era l'espressione che usavano i rabbini stessi.
+
+Alla vigilia della Seconda Guerra Mondiale, a Cracovia vivevano sessantamila ebrei. Erano il venticinque per cento della popolazione totale. Avevano la propria Università, ventidue sinagoghe, scuole, ospedali, giornali in yiddish e in ebraico. Una civiltà compiuta.
+
+Nel marzo 1941 i nazisti rinchiusero gli ebrei nel Ghetto di Podgórze, qualche chilometro a sud, oltre il fiume. Nel marzo 1943 il ghetto fu liquidato. Dei sessantamila, sopravvissero meno di tremila. Auschwitz è a sessanta chilometri da qui.
+
+Dopo la guerra, Kazimierz è rimasto silenzioso, vuoto, abbandonato per quarant'anni. Solo dopo "Schindler's List" di Spielberg, girato qui nel 1993, il quartiere è stato riscoperto e restaurato. Oggi è uno dei posti più vivi di Cracovia: gallerie, locali, mercati. Ma camminate piano. Sotto ogni pietra qui c'è un nome, una storia, un'assenza.
+
+La piazza dove siamo si chiama Plac Nowy, "Piazza Nuova" — paradossalmente, è una delle più antiche del quartiere. Al centro c'è una rotonda ottocentesca, un mercato coperto. Oggi vi si vendono "zapiekanki", grandi sandwich di pane tostato con funghi e formaggio. Sono famosi a Cracovia. Volendo, ne assaggeremo uno.`
+  },
+  {
+    n: 11, section: "kazimierz", icon: "📜",
+    title: "Sinagoga Vecchia",
+    subtitle: "Stara Synagoga – la più antica della Polonia",
+    duration: "3 min",
+    walking: "5 min",
+    coords: [50.0514697, 19.9485937],
+    intro: "Cinque secoli di preghiera in queste mura.",
+    text: `Eccoci alla Sinagoga Vecchia — Stara Synagoga. È la più antica sinagoga ancora esistente in Polonia. Le mura attuali risalgono al 1407, ma la struttura come la vedete adesso è del 1557, opera dell'architetto fiorentino Matteo Gucci dopo un incendio.
+
+È in stile rinascimentale italianeggiante con elementi gotici — l'unica sinagoga "a doppia navata" del paese, modello che imita le grandi sinagoghe di Praga e di Worms. Per cinque secoli, dal Quattrocento al Novecento, è stata il cuore della vita religiosa ebraica di Cracovia. Qui si tennero le grandi assemblee della comunità, qui parlò Tadeusz Kościuszko, l'eroe nazionale polacco, nel 1794, chiedendo il sostegno degli ebrei alla rivolta contro la Russia.
+
+Durante l'occupazione nazista, fu trasformata in deposito e in parte saccheggiata. Per fortuna, parte dell'arredo originale fu salvato e nascosto dai membri della comunità. Oggi è un museo della cultura ebraica di Cracovia: oggetti rituali, libri di preghiera del Cinquecento, fotografie del quartiere prima della guerra. Il bimah centrale — il pulpito da cui si legge la Torah — è ancora quello originale del 1570.
+
+Non è grande. Una visita di trenta-quaranta minuti basta. Ma vale la pena, anche solo per tre minuti di silenzio.`
+  },
+  {
+    n: 12, section: "kazimierz", icon: "🕯️",
+    title: "Sinagoga Remuh e Cimitero",
+    subtitle: "Il rabbino e i suoi morti",
+    duration: "3 min",
+    walking: "2 min",
+    coords: [50.0525097, 19.9469367],
+    intro: "Il luogo più vivo dell'ebraismo polacco.",
+    text: `La Sinagoga Remuh fu fondata nel 1553 da Israel Isserles, mercante e capo della comunità ebraica di Cracovia, in memoria del figlio Moses Isserles, il "Remuh".
+
+Il Remuh — l'acronimo del suo nome ebraico — è uno dei più grandi rabbini della storia dell'ebraismo. Visse soltanto trentatré anni, dal 1530 al 1572, ma in quel breve tempo scrisse le "Mappot" — le "Tovaglie" — un commentario allo Shulchan Aruch, il codice della legge rabbinica sefardita compilato in Spagna. Il Remuh adattò quel codice agli usi degli ebrei aschenaziti — gli ebrei dell'Europa orientale. Da allora, ogni famiglia ebraica aschenazita del mondo segue le regole stabilite qui, in questa piccola sinagoga di Cracovia.
+
+Il cimitero accanto, datato 1535, è uno dei più antichi cimiteri ebraici d'Europa. Durante la guerra i nazisti lo rasero quasi interamente al suolo, usando le lapidi come selciato per le strade. Dopo la guerra, le pietre furono recuperate. Quelle integre furono reinstallate. I frammenti, quelli irrimediabilmente spezzati, furono cementati a comporre un muro mosaico — il "Muro del Pianto" di Cracovia. Quando lo vedete, capite cosa è andato perduto.
+
+La tomba del Remuh è ancora qui, in fondo al cimitero. Pellegrini ebrei da tutto il mondo vengono a lasciare un sasso, secondo l'usanza, e talvolta un foglietto con una preghiera infilato fra le pietre. La leggenda dice che la tomba sia stata risparmiata dai nazisti per un miracolo: il maresciallo SS che voleva profanarla, dicono, ebbe un infarto sul posto. Probabilmente non è andata così. Ma è una storia che i sopravvissuti hanno raccontato, e a queste storie, qui, si tiene.`
+  },
+  {
+    n: 13, section: "kazimierz", icon: "🏛️",
+    title: "Sinagoga Tempel",
+    subtitle: "L'eleganza ottocentesca",
+    duration: "3 min",
+    walking: "3 min",
+    coords: [50.0529035, 19.9443967],
+    intro: "Quando l'ebraismo si fece moderno.",
+    text: `Quella che vediamo è la Sinagoga Tempel, costruita tra il 1860 e il 1862 in stile neo-moresco — vetrate colorate, archi a ferro di cavallo, decorazioni dorate. È la più recente delle sinagoghe storiche di Kazimierz, e la più ricca esteticamente.
+
+Apparteneva agli ebrei "progressisti" — il movimento riformato dell'ebraismo nato in Germania nell'Ottocento. A differenza degli ortodossi che pregavano in yiddish e in ebraico secondo i riti tradizionali, qui le preghiere si leggevano in tedesco e in polacco, gli uomini e le donne sedevano insieme — separati ma nella stessa sala — e l'organo accompagnava i salmi. Una sinagoga moderna, urbana, integrata nella società polacca.
+
+I nazisti la usarono come stalla per i cavalli. Dopo la guerra fu lasciata in rovina per decenni. Il restauro, iniziato negli anni Novanta con il sostegno della World Monuments Fund, è stato completato nel 2000. Oggi è di nuovo attiva: qualche servizio nei giorni di festa, e sempre concerti di musica klezmer di altissimo livello.
+
+Se in serata vediamo un'affissione sui concerti, vale la pena. La sala ha un'acustica eccezionale.`
+  },
+  {
+    n: 14, section: "kazimierz", icon: "🪑",
+    title: "Piazza degli Eroi del Ghetto",
+    subtitle: "Plac Bohaterów Getta",
+    duration: "4 min",
+    walking: "10 min — oltre il fiume",
+    coords: [50.0466767, 19.9544482],
+    intro: "Settanta sedie vuote.",
+    text: `Per finire questo tour, attraversiamo la Vistola e arriviamo a Podgórze, sull'altra sponda. Qui, in questa piazza, si compì il destino degli ebrei di Cracovia.
+
+Il 3 marzo 1941 i nazisti istituirono qui il Ghetto di Cracovia. Recintarono sei isolati con un muro alto tre metri costruito con lapidi del cimitero ebraico — un dettaglio crudele, voluto. Ammassarono diciassettemila persone in trecentoventi appartamenti. Quando il ghetto fu liquidato, il 13 e 14 marzo 1943, gli abitanti furono deportati a Płaszów, Auschwitz, Belzec. Pochissimi sopravvissero.
+
+Le settanta sedie vuote in bronzo che vedete piantate nella piazza sono il monumento commemorativo, inaugurato nel 2005. Sono opera degli architetti Piotr Lewicki e Kazimierz Łatak. Le sedie sono di varie dimensioni, sparse nello spazio, alcune in piedi, alcune capovolte. Rappresentano la vita interrotta: i mobili portati fuori dalle case durante la deportazione, che testimoni descrivono come uno spettacolo allucinante. Migliaia di sedie, tavoli, comodini abbandonati sulla piazza, prima di essere bruciati dai nazisti.
+
+Il numero settanta non è casuale. Ogni sedia rappresenta circa mille persone deportate o uccise.
+
+Sull'altro lato della piazza, al numero diciotto, vedete una farmacia: la "Farmacia dell'Aquila". Il proprietario, Tadeusz Pankiewicz, era polacco, non ebreo. Quando il ghetto fu istituito, rifiutò di abbandonare la sua farmacia all'interno del recinto. Per due anni, dal 1941 al 1943, distribuì medicine, nascose ebrei nel retrobottega, fece passare messaggi e cibo. Dopo la guerra, fu riconosciuto "Giusto fra le Nazioni". Oggi la farmacia è un piccolo museo.
+
+A pochi minuti da qui c'è la Fabbrica di Schindler — Lipowa quattro — anch'essa un museo. Oskar Schindler, l'industriale tedesco che salvò milleduecento ebrei, lavorò proprio qui. Se ne avete tempo domani, vale la pena.
+
+Il tour finisce qui. Ora possiamo tornare verso il centro, oppure cenare in Kazimierz: Klezmer-Hois sulla via Szeroka, cucina ebraica tradizionale e musica klezmer dal vivo. Sarebbe il giusto modo di chiudere la giornata.`
+  }
+];
+
+// =====================================================
+// APP LOGIC
+// =====================================================
+let map, markers = [], currentlyPlaying = null;
+let synth = window.speechSynthesis;
+let currentUtterance = null;
+let italianVoice = null;
+let availableItalianVoices = [];
+let currentRate = 0.92;
+let currentSection = "all";
+
+// Onboarding
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('onboarding').classList.add('hidden');
+  // Initialize voice on user gesture
+  if (synth) {
+    const init = new SpeechSynthesisUtterance(' ');
+    init.volume = 0;
+    synth.speak(init);
+    setTimeout(initVoice, 100);
+  }
+});
+
+// Voice priority: Premium > Enhanced > Local > Anything Italian
+function rankVoice(v) {
+  const name = v.name.toLowerCase();
+  let score = 0;
+  if (v.lang === 'it-IT') score += 100;
+  else if (v.lang.startsWith('it')) score += 80;
+  if (name.includes('premium')) score += 50;
+  if (name.includes('enhanced')) score += 40;
+  if (name.includes('siri')) score += 30;
+  if (name.includes('federica')) score += 20;
+  if (name.includes('alice')) score += 18;
+  if (name.includes('luca')) score += 15;
+  if (v.localService) score += 10;
+  return score;
+}
+
+function initVoice() {
+  const voices = synth.getVoices();
+  availableItalianVoices = voices
+    .filter(v => v.lang.startsWith('it'))
+    .sort((a, b) => rankVoice(b) - rankVoice(a));
+
+  if (availableItalianVoices.length > 0) {
+    italianVoice = availableItalianVoices[0];
+    populateVoiceSelector();
+  }
+}
+
+function populateVoiceSelector() {
+  const sel = document.getElementById('voiceSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+
+  if (availableItalianVoices.length === 0) {
+    const opt = document.createElement('option');
+    opt.textContent = 'Nessuna voce italiana disponibile';
+    sel.appendChild(opt);
+    return;
+  }
+
+  availableItalianVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    let label = v.name;
+    if (v.name.toLowerCase().includes('premium')) label = '⭐ ' + label;
+    else if (v.name.toLowerCase().includes('enhanced')) label = '✨ ' + label;
+    opt.textContent = label;
+    if (v === italianVoice) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+if (synth) {
+  synth.onvoiceschanged = initVoice;
+  initVoice();
+}
+
+// Settings panel
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  const p = document.getElementById('settingsPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('voiceSelect').addEventListener('change', (e) => {
+  italianVoice = availableItalianVoices[parseInt(e.target.value)];
+});
+
+document.getElementById('rateSlider').addEventListener('input', (e) => {
+  currentRate = parseFloat(e.target.value);
+  document.getElementById('rateValue').textContent = currentRate.toFixed(2);
+});
+
+document.getElementById('testVoiceBtn').addEventListener('click', () => {
+  stopSpeech();
+  const u = new SpeechSynthesisUtterance("Buongiorno Francesca. Iniziamo il nostro tour di Cracovia. Spero che la voce sia di tuo gradimento.");
+  u.lang = 'it-IT';
+  u.rate = currentRate;
+  if (italianVoice) u.voice = italianVoice;
+  synth.speak(u);
+});
+
+// Map setup
+function initMap() {
+  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([50.057, 19.940], 14);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '© OSM © CARTO'
+  }).addTo(map);
+
+  STOPS.forEach(stop => {
+    const isCelebration = stop.section === "wawel" || stop.n === 1;
+    const isPodNosem = stop.n === 4;
+    const cls = isPodNosem ? 'celebration' : '';
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="numbered-marker ${cls}">${stop.n}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    const marker = L.marker(stop.coords, { icon }).addTo(map);
+    marker.bindPopup(`<strong>${stop.n}. ${stop.title}</strong><br><small>${stop.subtitle}</small>`);
+    marker.on('click', () => {
+      const card = document.querySelector(`[data-stop="${stop.n}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!card.classList.contains('open')) card.classList.add('open');
+      }
+    });
+    markers.push(marker);
+  });
+
+  // Polyline along the route
+  const points = STOPS.map(s => s.coords);
+  L.polyline(points, { color: '#B68F40', weight: 2, opacity: 0.5, dashArray: '4, 6' }).addTo(map);
+}
+
+// Render stops
+function renderStops() {
+  const list = document.getElementById('stopsList');
+  list.innerHTML = '';
+
+  const filtered = STOPS.filter(s => currentSection === "all" || s.section === currentSection);
+  document.getElementById('counter').textContent = filtered.length + ' tappe';
+
+  filtered.forEach(stop => {
+    const isPodNosem = stop.n === 4;
+    const numClass = isPodNosem ? 'celebration' : '';
+
+    const card = document.createElement('div');
+    card.className = 'stop-card';
+    card.dataset.stop = stop.n;
+    card.innerHTML = `
+      <div class="stop-header">
+        <div class="stop-num ${numClass}">${stop.n}</div>
+        <div class="stop-info">
+          <div class="stop-title">${stop.title}</div>
+          <div class="stop-meta">
+            <span>${stop.subtitle}</span>
+            <span>${stop.duration}</span>
+            <span class="distance" data-n="${stop.n}"></span>
+          </div>
+        </div>
+        <div class="expand-icon">▼</div>
+      </div>
+      <div class="stop-body">
+        <p class="intro">${stop.intro}</p>
+        ${stop.text.split('\n\n').map(p => `<p>${p}</p>`).join('')}
+        <div class="stop-controls">
+          <button class="btn btn-primary play-btn" data-n="${stop.n}">
+            <span class="play-icon">▶</span> <span class="play-label">Ascolta</span>
+          </button>
+          <button class="btn btn-secondary navigate-btn" data-n="${stop.n}">🧭 Naviga</button>
+          <button class="btn btn-secondary map-btn" data-n="${stop.n}">📍 Sulla mappa</button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector('.stop-header').addEventListener('click', (e) => {
+      if (e.target.closest('.btn')) return;
+      card.classList.toggle('open');
+    });
+
+    card.querySelector('.play-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlay(stop);
+    });
+
+    card.querySelector('.navigate-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openInMaps(stop);
+    });
+
+    card.querySelector('.map-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      map.setView(stop.coords, 17, { animate: true });
+      markers[stop.n - 1].openPopup();
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    list.appendChild(card);
+  });
+}
+
+// Section tabs
+document.querySelectorAll('.section-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentSection = tab.dataset.section;
+    renderStops();
+  });
+});
+
+// Speech
+function togglePlay(stop) {
+  if (currentlyPlaying === stop.n) {
+    stopSpeech();
+    return;
+  }
+  stopSpeech();
+  startSpeech(stop);
+}
+
+function startSpeech(stop) {
+  if (!synth) {
+    alert('Il tuo browser non supporta la lettura vocale. Prova con Safari su iPhone.');
+    return;
+  }
+
+  // Optimize text for Italian TTS:
+  // - Polish words written phonetically for natural flow
+  // - Strategic pauses with periods/ellipses
+  let text = stop.intro + '. ' + stop.text;
+  text = optimizeForTTS(text);
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'it-IT';
+  utter.rate = currentRate;
+  utter.pitch = 1.0;
+  if (italianVoice) utter.voice = italianVoice;
+
+  utter.onstart = () => {
+    currentlyPlaying = stop.n;
+    updatePlayUI(stop, true);
+    showFloatingPlayer(stop);
+  };
+  utter.onend = () => {
+    currentlyPlaying = null;
+    updatePlayUI(stop, false);
+    hideFloatingPlayer();
+  };
+  utter.onerror = utter.onend;
+
+  currentUtterance = utter;
+  synth.speak(utter);
+}
+
+// Convert hard-to-pronounce Polish/foreign words to phonetic Italian spelling
+// and add expressive pauses where the original text has paragraph breaks
+function optimizeForTTS(text) {
+  const replacements = [
+    // Polish proper names → phonetic Italian
+    [/\bSmok Wawelski\b/g, 'Smok Vavelski'],
+    [/\bWawel\b/g, 'Vàvel'],
+    [/\bWawelska\b/g, 'Vavelska'],
+    [/\bRynek Główny\b/g, 'Rinek Gluvni'],
+    [/\bSukiennice\b/g, 'Sukiennitse'],
+    [/\bKazimierz\b/g, 'Kazimierg'],
+    [/\bKościuszko\b/g, 'Koshciusko'],
+    [/\bKościół\b/g, 'Koshchol'],
+    [/\bMariacka\b/g, 'Mariatska'],
+    [/\bMariacki\b/g, 'Mariatski'],
+    [/\bhejnał Mariacki\b/gi, 'hèinau Mariatski'],
+    [/\bhejnał\b/gi, 'hèinau'],
+    [/\bWłoszczyzna\b/gi, 'Vloshchìzna'],
+    [/\bwłoszczyzna\b/g, 'vloshchìzna'],
+    [/\bSzeroka\b/g, 'Sceroka'],
+    [/\bSzulchan Aruch\b/gi, 'Sciulchan Aruch'],
+    [/\bShulchan Aruch\b/gi, 'Sciulchan Aruch'],
+    [/\bMiodowa\b/g, 'Miodova'],
+    [/\bGrodzka\b/g, 'Grodzka'],
+    [/\bFloriańska\b/g, 'Florianska'],
+    [/\bPodgórze\b/g, 'Podgùgie'],
+    [/\bPłaszów\b/g, 'Plàshuv'],
+    [/\bBełżec\b/g, 'Belghietz'],
+    [/\bTadeusz Kościuszko\b/g, 'Tadeush Koshciusko'],
+    [/\bTadeusz Pankiewicz\b/g, 'Tadeush Pankièvich'],
+    [/\bWit Stwosz\b/g, 'Vit Stvosh'],
+    [/\bMikołaj Kopernik\b/g, 'Mikolai Kopernik'],
+    [/\bKarol Wojtyła\b/g, 'Karol Voitìua'],
+    [/\bWojtyła\b/g, 'Voitìua'],
+    [/\bCzesław Miłosz\b/g, 'Cesuàv Miuosh'],
+    [/\bWisława Szymborska\b/g, 'Visuàva Scimborska'],
+    [/\bVáclav Havel\b/g, 'Vatslav Havel'],
+    [/\bIsserles\b/g, 'Isserles'],
+    [/\bBoleslao\b/g, 'Boleslao'],
+    [/\bPiast\b/g, 'Piast'],
+    [/\bJagellonica\b/g, 'Iaghellònica'],
+    [/\bBronisław Chromy\b/g, 'Bronisuav Chromi'],
+    [/\bPlac Nowy\b/g, 'Plats Novi'],
+    [/\bPlac Bohaterów Getta\b/g, 'Plats Bohaterùv Ghetta'],
+    [/\bzapiekanki\b/g, 'tzapiekanki'],
+    [/\bStara Synagoga\b/g, 'Stara Sinagòga'],
+    [/\bRemuh\b/g, 'Rèmu'],
+    [/\bSkuba\b/g, 'Skuba'],
+    [/\bKrak\b/g, 'Krak'],
+    [/\bPodwale Grodzkie\b/g, 'Podvale Grodzkie'],
+    [/\bSzafarnia\b/g, 'Sciafarnia'],
+    [/\bGdańsk Główny\b/g, 'Gdansk Gluvni'],
+    [/\bGdańsk\b/g, 'Gdansk'],
+    [/\bMotława\b/g, 'Motuàva'],
+    [/\bSolidarność\b/g, 'Solidarnoshch'],
+    // Light pause markers — newlines become longer pauses
+    [/\n\n/g, '. ... '],
+    [/\n/g, '. '],
+  ];
+
+  let optimized = text;
+  for (const [pattern, replacement] of replacements) {
+    optimized = optimized.replace(pattern, replacement);
+  }
+  return optimized;
+}
+
+function stopSpeech() {
+  if (synth) synth.cancel();
+  if (currentlyPlaying) {
+    const stop = STOPS.find(s => s.n === currentlyPlaying);
+    if (stop) updatePlayUI(stop, false);
+  }
+  currentlyPlaying = null;
+  hideFloatingPlayer();
+}
+
+function updatePlayUI(stop, playing) {
+  document.querySelectorAll('.play-btn').forEach(btn => {
+    if (btn.dataset.n == stop.n) {
+      const icon = btn.querySelector('.play-icon');
+      const label = btn.querySelector('.play-label');
+      if (playing) {
+        btn.classList.add('playing');
+        icon.textContent = '⏸';
+        label.textContent = 'Ferma';
+      } else {
+        btn.classList.remove('playing');
+        icon.textContent = '▶';
+        label.textContent = 'Ascolta';
+      }
+    } else {
+      btn.classList.remove('playing');
+      btn.querySelector('.play-icon').textContent = '▶';
+      btn.querySelector('.play-label').textContent = 'Ascolta';
+    }
+  });
+}
+
+function showFloatingPlayer(stop) {
+  const fp = document.getElementById('floatingPlayer');
+  fp.classList.add('show');
+  document.getElementById('fpTitle').textContent = stop.n + '. ' + stop.title;
+}
+
+function hideFloatingPlayer() {
+  document.getElementById('floatingPlayer').classList.remove('show');
+}
+
+// Floating player controls
+let isPaused = false;
+document.getElementById('fpPause').addEventListener('click', () => {
+  if (!synth) return;
+  if (isPaused) {
+    synth.resume();
+    document.getElementById('fpPause').textContent = '⏸';
+    isPaused = false;
+  } else {
+    synth.pause();
+    document.getElementById('fpPause').textContent = '▶';
+    isPaused = true;
+  }
+});
+
+document.getElementById('fpStop').addEventListener('click', () => {
+  stopSpeech();
+});
+
+// =====================================================
+// GEOLOCATION & NAVIGATION
+// =====================================================
+let userMarker = null;
+let userAccuracyCircle = null;
+let watchId = null;
+let lastNotifiedStop = null;
+
+// Detect iOS for Apple Maps URL
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+// Open native maps app for walking directions to a stop
+function openInMaps(stop) {
+  const [lat, lng] = stop.coords;
+  const name = encodeURIComponent(stop.n + '. ' + stop.title + ', Kraków');
+  let url;
+  if (isIOS()) {
+    // Apple Maps with walking mode
+    url = `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w&q=${name}`;
+    // Fallback to https URL if scheme is blocked
+    window.location.href = url;
+    setTimeout(() => {
+      window.open(`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w&q=${name}`, '_blank');
+    }, 500);
+  } else {
+    // Google Maps walking
+    url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+    window.open(url, '_blank');
+  }
+}
+
+// Haversine distance in meters
+function distanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+// Update user position on map
+function updateUserPosition(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  const acc = pos.coords.accuracy;
+  const userIcon = L.divIcon({
+    className: '',
+    html: `<div style="width: 18px; height: 18px; background: #2563EB; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);"></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+
+  if (userMarker) {
+    userMarker.setLatLng([lat, lng]);
+    userAccuracyCircle.setLatLng([lat, lng]);
+    userAccuracyCircle.setRadius(acc);
+  } else {
+    userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+    userAccuracyCircle = L.circle([lat, lng], {
+      radius: acc,
+      color: '#2563EB',
+      fillColor: '#2563EB',
+      fillOpacity: 0.10,
+      weight: 1
+    }).addTo(map);
+  }
+
+  // Update distances on each stop card
+  STOPS.forEach(stop => {
+    const dist = distanceMeters(lat, lng, stop.coords[0], stop.coords[1]);
+    const el = document.querySelector(`.distance[data-n="${stop.n}"]`);
+    if (el) {
+      el.textContent = dist < 1000 ? Math.round(dist) + ' m' : (dist/1000).toFixed(1) + ' km';
+    }
+  });
+
+  // Find nearest stop and notify if very close (<50m) and not already notified
+  let nearest = null, nearestDist = Infinity;
+  STOPS.forEach(stop => {
+    const d = distanceMeters(lat, lng, stop.coords[0], stop.coords[1]);
+    if (d < nearestDist) { nearestDist = d; nearest = stop; }
+  });
+
+  if (nearest && nearestDist < 50 && lastNotifiedStop !== nearest.n) {
+    lastNotifiedStop = nearest.n;
+    showProximityToast(nearest);
+    // Auto-open card
+    const card = document.querySelector(`[data-stop="${nearest.n}"]`);
+    if (card && !card.classList.contains('open')) {
+      card.classList.add('open');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else if (nearestDist > 100) {
+    // Reset notification when user walks away
+    lastNotifiedStop = null;
+  }
+}
+
+function showProximityToast(stop) {
+  const existing = document.getElementById('proximityToast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'proximityToast';
+  toast.style.cssText = `
+    position: fixed; top: calc(var(--safe-top) + 70px); left: 12px; right: 12px;
+    background: var(--gold); color: white; padding: 14px 18px;
+    border-radius: 12px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(182, 143, 64, 0.4); z-index: 300;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    animation: slideDown 0.3s ease-out;
+  `;
+  toast.innerHTML = `
+    <div style="font-size: 22px;">📍</div>
+    <div style="flex: 1;">
+      <div style="font-size: 11px; opacity: 0.85; letter-spacing: 1px; text-transform: uppercase;">Sei arrivato</div>
+      <div>${stop.n}. ${stop.title}</div>
+      <div style="font-size: 11px; font-weight: 400; opacity: 0.85; margin-top: 2px;">Tocca per ascoltare</div>
+    </div>
+    <div style="font-size: 18px;">▶</div>
+  `;
+  toast.addEventListener('click', () => {
+    toast.remove();
+    togglePlay(stop);
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.style.opacity = '0'; }, 8000);
+  setTimeout(() => toast.remove(), 9000);
+}
+
+function startGeolocation() {
+  if (!navigator.geolocation) {
+    alert('Geolocalizzazione non disponibile su questo dispositivo.');
+    return;
+  }
+  if (watchId !== null) {
+    // Toggle off
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    if (userAccuracyCircle) { map.removeLayer(userAccuracyCircle); userAccuracyCircle = null; }
+    document.getElementById('locateBtn').style.background = 'rgba(255,255,255,0.10)';
+    return;
+  }
+  document.getElementById('locateBtn').style.background = 'var(--gold)';
+  // First fast position
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      updateUserPosition(pos);
+      map.setView([pos.coords.latitude, pos.coords.longitude], 16, { animate: true });
+    },
+    err => {
+      alert('Impossibile ottenere la posizione. Verifica che la geolocalizzazione sia attiva nelle impostazioni di Safari (Impostazioni → Safari → Posizione).');
+      document.getElementById('locateBtn').style.background = 'rgba(255,255,255,0.10)';
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+  // Then watch
+  watchId = navigator.geolocation.watchPosition(
+    updateUserPosition,
+    err => console.warn('Geo error:', err),
+    { enableHighAccuracy: true, timeout: 30000, maximumAge: 5000 }
+  );
+}
+
+document.getElementById('locateBtn').addEventListener('click', startGeolocation);
+
+// Toast animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+`;
+document.head.appendChild(style);
+
+// Init
+window.addEventListener('load', () => {
+  initMap();
+  renderStops();
+});
+</script>
+</body>
+</html>
