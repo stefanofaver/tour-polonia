@@ -211,6 +211,120 @@ header {
   font-weight: 700;
 }
 
+.stop-image-wrap {
+  margin: 0 -18px 14px;
+  position: relative;
+  background: linear-gradient(180deg, #F1ECE0 0%, #E5DDC8 100%);
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  cursor: pointer;
+}
+.stop-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s;
+}
+.stop-image-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
+}
+.stop-image-placeholder .icon {
+  font-size: 38px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+.stop-image-placeholder .label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.stop-image-zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(27, 42, 78, 0.6);
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.stop-image-wrap.loaded .stop-image-zoom-hint { opacity: 1; }
+
+.stop-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #E5DDC8, #F1ECE0);
+  flex: 0 0 56px;
+  object-fit: cover;
+  margin-right: 4px;
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: zoom-out;
+}
+.lightbox.show { display: flex; }
+.lightbox img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.lightbox-close {
+  position: absolute;
+  top: calc(var(--safe-top) + 16px);
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-caption {
+  position: absolute;
+  bottom: calc(var(--safe-bot) + 20px);
+  left: 20px;
+  right: 20px;
+  text-align: center;
+  color: white;
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.85;
+}
+
 .stop-controls {
   display: flex;
   gap: 8px;
@@ -454,6 +568,13 @@ header {
 
 <div class="footer-note">Buon compleanno Francesca · Con amore, Stefano</div>
 
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // =====================================================
@@ -468,6 +589,7 @@ const STOPS = [
     duration: "3 min",
     walking: "Inizio",
     coords: [50.0530183, 19.9335845],
+    wiki: { it: "Smok_Wawelski", en: "Wawel_Dragon_(statue)" },
     intro: "Iniziamo dove tutto comincia per i bambini polacchi: dal drago.",
     text: `La leggenda racconta che molto tempo fa, sotto questa collina del Wawel, viveva un drago feroce. Divorava bestiame, fanciulle, e terrorizzava la città. Re Krak, il fondatore mitico di Cracovia, promise la mano della figlia a chiunque uccidesse il mostro.
 
@@ -484,6 +606,7 @@ Sopra di noi, sulla collina, mille anni di Polonia. Saliamo.`
     duration: "4 min",
     walking: "5 min a piedi",
     coords: [50.0541115, 19.935423],
+    wiki: { it: "Castello_del_Wawel", en: "Wawel_Castle" },
     intro: "Il cuore politico della Polonia per cinque secoli.",
     text: `Siamo nel cortile rinascimentale del Castello Reale del Wawel, e questa è la collina più importante di tutta la Polonia. Qui, dall'undicesimo secolo fino alla fine del Cinquecento, sono stati incoronati e sepolti i re polacchi.
 
@@ -502,6 +625,7 @@ Oggi il castello è il luogo simbolo dell'identità polacca. Non c'è polacco ch
     duration: "4 min",
     walking: "1 min",
     coords: [50.0546371, 19.9354684],
+    wiki: { it: "Cattedrale_del_Wawel", en: "Wawel_Cathedral" },
     intro: "Il pantheon della Polonia.",
     text: `Eccoci alla Cattedrale del Wawel — per i polacchi, semplicemente "la Cattedrale". Quella che vedete è la terza chiesa costruita su questo luogo: la prima del 1020, la seconda del 1142, l'attuale consacrata nel 1364.
 
@@ -520,6 +644,7 @@ All'ingresso noterete tre grandi ossa appese: secondo la leggenda, sono ossa del
     duration: "3 min",
     walking: "5 min in discesa",
     coords: [50.0566374, 19.9375489],
+    wiki: { it: "Via_Kanonicza", en: "Kanonicza_Street" },
     intro: "La via medievale più antica della città. Casa nostra, oggi.",
     text: `Stiamo percorrendo via Kanonicza, la più antica strada di Cracovia. Esisteva già nel tredicesimo secolo, quando collegava la cattedrale del Wawel al cuore della città. Il nome viene dai canonici della cattedrale che qui avevano le loro case capitolari.
 
@@ -540,6 +665,7 @@ Più avanti, al numero ventidue, è dove ceneremo stasera. Pod Nosem, una stella
     duration: "3 min",
     walking: "3 min",
     coords: [50.0569321, 19.9387855],
+    wiki: { it: "Chiesa_dei_Santi_Pietro_e_Paolo_(Cracovia)", en: "Saints_Peter_and_Paul_Church,_Kraków" },
     intro: "Il primo barocco della Polonia.",
     text: `Questa chiesa è una nostra vecchia conoscenza italiana. Costruita tra il 1597 e il 1619 per i Gesuiti, è il primo edificio barocco mai costruito in Polonia. L'architetto era Giovanni Maria Bernardoni, gesuita italiano, e si ispirò esplicitamente alla Chiesa del Gesù a Roma — la chiesa madre dei Gesuiti.
 
@@ -556,6 +682,7 @@ L'acustica della chiesa è eccezionale, e oggi spesso vi si tengono concerti bar
     duration: "4 min",
     walking: "4 min",
     coords: [50.0618971, 19.936756],
+    wiki: { it: "Rynek_Główny", en: "Main_Square,_Kraków" },
     intro: "Duecento metri per duecento metri di storia.",
     text: `Eccoci nella Piazza del Mercato di Cracovia — Rynek Główny. Duecento metri per duecento metri, è la più grande piazza medievale d'Europa, esattamente come fu progettata nel 1257.
 
@@ -574,6 +701,7 @@ Guardate intorno. La torre alta che vedete è il Municipio. Il lungo edificio ce
     duration: "4 min",
     walking: "1 min",
     coords: [50.0616411, 19.9393903],
+    wiki: { it: "Basilica_di_Santa_Maria_(Cracovia)", en: "St._Mary's_Basilica,_Kraków" },
     intro: "Le due torri, l'altare di Stoss, e la tromba interrotta.",
     text: `La Basilica di Santa Maria. Costruita fra il tredicesimo e il quindicesimo secolo, gotica in mattoni — il "Backsteingotik" tipico del nord Europa. Le due torri non sono uguali e non per errore.
 
@@ -594,6 +722,7 @@ Il soffitto stellato blu cobalto è ottocentesco, opera di Jan Matejko, il pitto
     duration: "3 min",
     walking: "1 min",
     coords: [50.0617132, 19.9373488],
+    wiki: { it: "Sukiennice", en: "Sukiennice,_Kraków" },
     intro: "Il mercato che dura da settecento anni.",
     text: `Stiamo davanti al Sukiennice, il Mercato dei Drappi. Letteralmente, "il luogo dei panni di lana". È stato il centro del commercio internazionale della Cracovia medievale.
 
@@ -612,6 +741,7 @@ Al primo piano c'è la Galleria di Arte Polacca dell'Ottocento, parte del Museo 
     duration: "3 min",
     walking: "8 min — direzione nord",
     coords: [50.0648602, 19.9413951],
+    wiki: { it: "Porta_Floriana", en: "St._Florian's_Gate" },
     intro: "Dove i re entravano a Cracovia.",
     text: `Camminiamo lungo via Floriańska, la più elegante strada commerciale di Cracovia. Per secoli questa via è stata la "Strada Reale": ogni nuovo sovrano polacco la percorreva a cavallo dalla Porta Floriana fino al Wawel per essere incoronato.
 
@@ -632,6 +762,7 @@ Stiamo per allontanarci dal centro. Ora ci dirigiamo a sud-est, verso un quartie
     duration: "3 min",
     walking: "20 min a piedi (o 8 min in taxi)",
     coords: [50.0518711, 19.9446205],
+    wiki: { it: "Kazimierz_(Cracovia)", en: "Kazimierz" },
     intro: "Una città dentro la città. Una storia luminosa, e una catastrofe.",
     text: `Siamo entrati a Kazimierz. Un tempo era un comune autonomo, fondato nel 1335 dal re Casimiro il Grande — da cui prende il nome — e separato da Cracovia dalle acque della Vistola. Solo nel 1791 fu unito alla città.
 
@@ -652,6 +783,7 @@ La piazza dove siamo si chiama Plac Nowy, "Piazza Nuova" — paradossalmente, è
     duration: "3 min",
     walking: "5 min",
     coords: [50.0514697, 19.9485937],
+    wiki: { it: "Sinagoga_Vecchia_(Cracovia)", en: "Old_Synagogue_(Kraków)" },
     intro: "Cinque secoli di preghiera in queste mura.",
     text: `Eccoci alla Sinagoga Vecchia — Stara Synagoga. È la più antica sinagoga ancora esistente in Polonia. Le mura attuali risalgono al 1407, ma la struttura come la vedete adesso è del 1557, opera dell'architetto fiorentino Matteo Gucci dopo un incendio.
 
@@ -668,6 +800,7 @@ Non è grande. Una visita di trenta-quaranta minuti basta. Ma vale la pena, anch
     duration: "3 min",
     walking: "2 min",
     coords: [50.0525097, 19.9469367],
+    wiki: { it: "Sinagoga_Remuh", en: "Remuh_Synagogue" },
     intro: "Il luogo più vivo dell'ebraismo polacco.",
     text: `La Sinagoga Remuh fu fondata nel 1553 da Israel Isserles, mercante e capo della comunità ebraica di Cracovia, in memoria del figlio Moses Isserles, il "Remuh".
 
@@ -684,6 +817,7 @@ La tomba del Remuh è ancora qui, in fondo al cimitero. Pellegrini ebrei da tutt
     duration: "3 min",
     walking: "3 min",
     coords: [50.0529035, 19.9443967],
+    wiki: { it: "Sinagoga_Tempel_(Cracovia)", en: "Tempel_Synagogue,_Kraków" },
     intro: "Quando l'ebraismo si fece moderno.",
     text: `Quella che vediamo è la Sinagoga Tempel, costruita tra il 1860 e il 1862 in stile neo-moresco — vetrate colorate, archi a ferro di cavallo, decorazioni dorate. È la più recente delle sinagoghe storiche di Kazimierz, e la più ricca esteticamente.
 
@@ -700,6 +834,7 @@ Se in serata vediamo un'affissione sui concerti, vale la pena. La sala ha un'acu
     duration: "4 min",
     walking: "10 min — oltre il fiume",
     coords: [50.0466767, 19.9544482],
+    wiki: { it: "Piazza_degli_Eroi_del_Ghetto_(Cracovia)", en: "Ghetto_Heroes_Square" },
     intro: "Settanta sedie vuote.",
     text: `Per finire questo tour, attraversiamo la Vistola e arriviamo a Podgórze, sull'altra sponda. Qui, in questa piazza, si compì il destino degli ebrei di Cracovia.
 
@@ -720,6 +855,115 @@ Il tour finisce qui. Ora possiamo tornare verso il centro, oppure cenare in Kazi
 // =====================================================
 // APP LOGIC
 // =====================================================
+
+// =====================================================
+// WIKIPEDIA IMAGES
+// =====================================================
+const wikiCache = {}; // in-memory cache for current session
+const WIKI_CACHE_KEY = 'tour_wiki_cache_v1';
+
+// Persistent cache from sessionStorage (don't pollute localStorage)
+try {
+  const stored = sessionStorage.getItem(WIKI_CACHE_KEY);
+  if (stored) Object.assign(wikiCache, JSON.parse(stored));
+} catch(e) {}
+
+function saveWikiCache() {
+  try {
+    sessionStorage.setItem(WIKI_CACHE_KEY, JSON.stringify(wikiCache));
+  } catch(e) {}
+}
+
+async function fetchWikiImage(stop) {
+  if (!stop.wiki) return null;
+  const cacheKey = stop.wiki.it + '|' + stop.wiki.en;
+  if (wikiCache[cacheKey]) return wikiCache[cacheKey];
+
+  // Try Italian first, then English
+  const langs = ['it', 'en'];
+  const articles = [stop.wiki.it, stop.wiki.en];
+
+  for (let i = 0; i < langs.length; i++) {
+    const lang = langs[i];
+    const article = articles[i];
+    if (!article) continue;
+    try {
+      const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(article)}`;
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'TourAudio/1.0' },
+        cache: 'force-cache'
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.thumbnail && data.thumbnail.source) {
+        const result = {
+          thumb: data.thumbnail.source,
+          // Bump up resolution: replace size in URL
+          full: data.originalimage ? data.originalimage.source : data.thumbnail.source,
+          desc: data.description || '',
+          extract: (data.extract || '').slice(0, 200)
+        };
+        wikiCache[cacheKey] = result;
+        saveWikiCache();
+        return result;
+      }
+    } catch (e) {
+      // try next language
+    }
+  }
+  // Negative cache to avoid retries
+  wikiCache[cacheKey] = null;
+  saveWikiCache();
+  return null;
+}
+
+// Lazy load image when stop card is opened (or visible)
+function loadStopImage(stop, wrapEl) {
+  if (!wrapEl || wrapEl.dataset.loaded === 'true') return;
+  wrapEl.dataset.loaded = 'true';
+  fetchWikiImage(stop).then(data => {
+    if (data && data.thumb) {
+      const img = wrapEl.querySelector('img');
+      if (img) {
+        img.src = data.thumb;
+        img.dataset.full = data.full || data.thumb;
+        img.dataset.caption = (data.desc || stop.subtitle || '');
+        img.onload = () => {
+          wrapEl.classList.add('loaded');
+          const ph = wrapEl.querySelector('.stop-image-placeholder');
+          if (ph) ph.style.display = 'none';
+        };
+        img.onerror = () => {
+          // keep placeholder
+        };
+      }
+    }
+  });
+}
+
+// Lightbox open/close
+function openLightbox(src, caption) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxCaption').textContent = caption || '';
+  lb.classList.add('show');
+}
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('show');
+  document.getElementById('lightboxImg').src = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const lb = document.getElementById('lightbox');
+  if (lb) {
+    lb.addEventListener('click', e => {
+      if (e.target === lb || e.target.id === 'lightboxImg') closeLightbox();
+    });
+    document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  }
+});
+
+
 let map, markers = [], currentlyPlaying = null;
 let synth = window.speechSynthesis;
 let currentUtterance = null;
@@ -888,6 +1132,14 @@ function renderStops() {
         <div class="expand-icon">▼</div>
       </div>
       <div class="stop-body">
+        <div class="stop-image-wrap" data-stop="${stop.n}">
+          <div class="stop-image-placeholder">
+            <div class="icon">${stop.icon || '🏛'}</div>
+            <div class="label">Caricamento immagine…</div>
+          </div>
+          <img alt="${stop.title}" loading="lazy">
+          <div class="stop-image-zoom-hint">⤢</div>
+        </div>
         <p class="intro">${stop.intro}</p>
         ${stop.text.split('\n\n').map(p => `<p>${p}</p>`).join('')}
         <div class="stop-controls">
@@ -922,6 +1174,36 @@ function renderStops() {
       document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
+    // Image lazy-load + lightbox
+    const imgWrap = card.querySelector('.stop-image-wrap');
+    if (imgWrap) {
+      imgWrap.addEventListener('click', (e) => {
+        const img = imgWrap.querySelector('img');
+        if (img && img.src && img.complete && img.naturalWidth > 0) {
+          openLightbox(img.dataset.full || img.src, img.dataset.caption || stop.title);
+        }
+      });
+      // Load image when card is opened OR after a short delay if section visible
+      const triggerLoad = () => loadStopImage(stop, imgWrap);
+      card.querySelector('.stop-header').addEventListener('click', () => {
+        setTimeout(triggerLoad, 100);
+      }, { once: false });
+      // Also pre-load images visible in the first viewport (lazy IO)
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              triggerLoad();
+              io.unobserve(entry.target);
+            }
+          });
+        }, { rootMargin: '200px' });
+        io.observe(card);
+      } else {
+        // Fallback: load all
+        setTimeout(triggerLoad, 500);
+      }
+    }
     list.appendChild(card);
   });
 }

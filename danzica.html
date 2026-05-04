@@ -408,6 +408,13 @@ header {
 
 <div class="footer-note">Danzica & Cracovia · Maggio 2026</div>
 
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // =====================================================
@@ -422,6 +429,7 @@ const STOPS = [
     duration: "3 min",
     walking: "Inizio del percorso",
     coords: [54.3499324, 18.6465337],
+    wiki: { it: "Brama_Wyżynna", en: "Highland_Gate" },
     intro: "Da qui i re polacchi entravano in città.",
     text: `Cominciamo il tour di Danzica dove cominciava la cerimonia. La Porta Alta — Brama Wyżynna — è il primo varco della Via Reale, il percorso che ogni nuovo re polacco doveva attraversare per essere riconosciuto come sovrano della città.
 
@@ -438,6 +446,7 @@ Davanti a noi si apre la Via Lunga — Długa — che porta dritta al cuore dell
     duration: "3 min",
     walking: "1 min",
     coords: [54.3496766, 18.6480469],
+    wiki: { it: "Złota_Brama_(Danzica)", en: "Golden_Gate,_Gdańsk" },
     intro: "Le sette virtù di un buon cittadino.",
     text: `Pochi metri più avanti, la Porta d'Oro. Costruita nel 1612 dall'architetto Abraham van den Block, è l'opera più rinascimentale della città. Lo stile è manierista olandese, perché Danzica nei secoli d'oro guardava più ad Amsterdam che a Cracovia.
 
@@ -454,6 +463,7 @@ La porta fu rasa al suolo nel 1945 dai bombardamenti sovietici e dall'incendio d
     duration: "3 min",
     walking: "Camminata di 5 min",
     coords: [54.3492141, 18.6502683],
+    wiki: { it: "Via_Lunga_(Danzica)", en: "Długa_Street,_Gdańsk" },
     intro: "Una via lunga settecento anni.",
     text: `Stiamo percorrendo la Via Lunga, l'arteria principale di Danzica fin dal Trecento. Quattrocento metri di facciate strette, alte, dipinte in colori pastello — verdi, gialli, rosa, ocra. Nessuna è uguale all'altra.
 
@@ -472,6 +482,7 @@ La città intera fu distrutta al novanta per cento durante la Seconda Guerra Mon
     duration: "3 min",
     walking: "1 min",
     coords: [54.3485459, 18.6532258],
+    wiki: { it: "Fontana_di_Nettuno_(Danzica)", en: "Neptune's_Fountain,_Gdańsk" },
     intro: "Il dio del mare con il tridente verso il cielo.",
     text: `Davanti a noi si apre la piazza più grande della Via Reale: il Lungo Mercato — Długi Targ. E qui, al centro, dal 1633, c'è la Fontana del Nettuno. È il simbolo di Danzica come è il leone di San Marco a Venezia.
 
@@ -488,6 +499,7 @@ Durante la guerra, gli abitanti della città riuscirono a smontare la statua e n
     duration: "3 min",
     walking: "30 secondi",
     coords: [54.3487919, 18.653381],
+    wiki: { it: "Corte_di_Artù_(Danzica)", en: "Artus_Court" },
     intro: "Un club esclusivo di mercanti, ispirato a Re Artù.",
     text: `Subito dietro la Fontana del Nettuno, c'è la Corte di Artus. Un edificio del Quattrocento, ricostruito più volte fino alla forma attuale del 1617. Il nome viene da Re Artù, il leggendario re britannico — perché qui, dal Trecento, si riuniva la confraternita più esclusiva dei mercanti di Danzica, che si paragonavano ai cavalieri della Tavola Rotonda.
 
@@ -506,6 +518,7 @@ Oggi la Corte è un museo. Si entra, si vede la sala, la stufa, i modelli di nav
     duration: "4 min",
     walking: "1 min",
     coords: [54.3486855, 18.6527963],
+    wiki: { it: "Municipio_della_Città_Principale", en: "Main_Town_Hall,_Gdańsk" },
     intro: "Centottanta scalini, ottocento anni di storia.",
     text: `La torre alta che vediamo davanti a noi è il Municipio della Città Principale — Ratusz Głównego Miasta. Costruito nel Trecento, ampliato nel Quattrocento, decorato nel Cinquecento, distrutto nel 1945, ricostruito negli anni Cinquanta. La storia di Danzica in tre date.
 
@@ -526,6 +539,7 @@ Aneddoto. Quando i nazisti conquistarono Danzica nel settembre 1939, Albert Fors
     duration: "3 min",
     walking: "3 min",
     coords: [54.3479081, 18.6557242],
+    wiki: { it: "Porta_Verde_(Danzica)", en: "Green_Gate,_Gdańsk" },
     intro: "Da qui la città si affaccia sul fiume.",
     text: `Eccoci alla fine della Via Reale. La Porta Verde — Zielona Brama — è l'ultima porta del percorso, quella che si affaccia sul fiume Motława. Costruita fra il 1564 e il 1568 dall'architetto Hans Kramer di Dresda, è in stile manierista olandese, con quattro grandi passaggi a volta che permettevano alle carrozze di entrare e uscire dalla città.
 
@@ -542,6 +556,7 @@ Fra Porta Verde e fiume si stende il Lungo Ponte — Długie Pobrzeże — la pa
     duration: "3 min",
     walking: "5 min sul lungofiume",
     coords: [54.3504943, 18.6575279],
+    wiki: { it: "Żuraw", en: "Gdańsk_Crane" },
     intro: "Trent'anni di storia in un edificio impossibile.",
     text: `Avanti a noi, dominante sul fiume, lo Żuraw — la Gru. Costruita fra il 1442 e il 1444, è il simbolo industriale di Danzica. Per quattro secoli è stata la più grande gru portuale d'Europa — capace di sollevare carichi fino a quattro tonnellate, e di alzare gli alberi maestri delle navi a venticinque metri di altezza.
 
@@ -560,6 +575,7 @@ Bombardata nel 1945, la gru fu ricostruita fra il 1956 e il 1962. Oggi ospita un
     duration: "4 min",
     walking: "8 min — torniamo verso il centro",
     coords: [54.3497628, 18.6540562],
+    wiki: { it: "Via_Mariacka_(Danzica)", en: "Mariacka_Street" },
     intro: "La via dei terrazzi e dell'ambra.",
     text: `Lasciamo il lungofiume e attraverso Via Wartka rientriamo nel centro storico. Fra le tante vie laterali, una sola merita una sosta lunga: Via Mariacka. È la più bella di Danzica, e una delle più belle d'Europa.
 
@@ -580,6 +596,7 @@ In fondo, la Basilica di Santa Maria. La nostra prossima tappa.`
     duration: "4 min",
     walking: "1 min",
     coords: [54.3498349, 18.6530561],
+    wiki: { it: "Basilica_di_Santa_Maria_(Danzica)", en: "St._Mary's_Church,_Gdańsk" },
     intro: "Cento metri per cinquanta. Cinque navate. Venticinquemila fedeli.",
     text: `Davanti a noi, la Basilica di Santa Maria di Danzica — la più grande chiesa di mattoni del mondo. Le dimensioni sono impressionanti: centocinque metri di lunghezza, sessantasei di larghezza al transetto, trenta metri di altezza alla volta. Può contenere venticinquemila persone in piedi.
 
@@ -606,6 +623,7 @@ Quando uscite dalla basilica, riprendiamo Via Lunga in direzione del Centro Soli
     duration: "4 min",
     walking: "20 min a piedi (o 10 min in tram)",
     coords: [54.3605664, 18.6498817],
+    wiki: { it: "Cantiere_navale_di_Danzica", en: "Gdańsk_Shipyard" },
     intro: "Qui è cominciata la fine del comunismo in Europa.",
     text: `Siamo davanti al Cancello numero 2 dell'antico Cantiere Navale Lenin di Danzica. È un cancello qualunque — sbarre verticali rosse, garitta di guardia, un piccolo presidio. Ma è uno dei luoghi più importanti del Novecento europeo.
 
@@ -628,6 +646,7 @@ Dal cancello entriamo verso il Centro. Il Centro Europeo Solidarność.`
     duration: "4 min",
     walking: "2 min",
     coords: [54.361313, 18.64974],
+    wiki: { it: "Centro_europeo_della_solidarietà", en: "European_Solidarity_Centre" },
     intro: "Un museo, una biblioteca, una memoria.",
     text: `Eccoci al Centro Europeo Solidarność. L'edificio in lamiera ossidata che vediamo, rosso ruggine, fu inaugurato nel 2014, opera dello studio polacco FORT. La forma volutamente ricorda lo scafo arrugginito di una nave nel cantiere — un omaggio alla classe operaia che fece la rivoluzione.
 
@@ -652,6 +671,115 @@ Il tour finisce qui. Ora possiamo tornare in centro, andare a cena. Domani Craco
 // =====================================================
 // APP LOGIC (identical to Krakow tour)
 // =====================================================
+
+// =====================================================
+// WIKIPEDIA IMAGES
+// =====================================================
+const wikiCache = {}; // in-memory cache for current session
+const WIKI_CACHE_KEY = 'tour_wiki_cache_v1';
+
+// Persistent cache from sessionStorage (don't pollute localStorage)
+try {
+  const stored = sessionStorage.getItem(WIKI_CACHE_KEY);
+  if (stored) Object.assign(wikiCache, JSON.parse(stored));
+} catch(e) {}
+
+function saveWikiCache() {
+  try {
+    sessionStorage.setItem(WIKI_CACHE_KEY, JSON.stringify(wikiCache));
+  } catch(e) {}
+}
+
+async function fetchWikiImage(stop) {
+  if (!stop.wiki) return null;
+  const cacheKey = stop.wiki.it + '|' + stop.wiki.en;
+  if (wikiCache[cacheKey]) return wikiCache[cacheKey];
+
+  // Try Italian first, then English
+  const langs = ['it', 'en'];
+  const articles = [stop.wiki.it, stop.wiki.en];
+
+  for (let i = 0; i < langs.length; i++) {
+    const lang = langs[i];
+    const article = articles[i];
+    if (!article) continue;
+    try {
+      const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(article)}`;
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'TourAudio/1.0' },
+        cache: 'force-cache'
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.thumbnail && data.thumbnail.source) {
+        const result = {
+          thumb: data.thumbnail.source,
+          // Bump up resolution: replace size in URL
+          full: data.originalimage ? data.originalimage.source : data.thumbnail.source,
+          desc: data.description || '',
+          extract: (data.extract || '').slice(0, 200)
+        };
+        wikiCache[cacheKey] = result;
+        saveWikiCache();
+        return result;
+      }
+    } catch (e) {
+      // try next language
+    }
+  }
+  // Negative cache to avoid retries
+  wikiCache[cacheKey] = null;
+  saveWikiCache();
+  return null;
+}
+
+// Lazy load image when stop card is opened (or visible)
+function loadStopImage(stop, wrapEl) {
+  if (!wrapEl || wrapEl.dataset.loaded === 'true') return;
+  wrapEl.dataset.loaded = 'true';
+  fetchWikiImage(stop).then(data => {
+    if (data && data.thumb) {
+      const img = wrapEl.querySelector('img');
+      if (img) {
+        img.src = data.thumb;
+        img.dataset.full = data.full || data.thumb;
+        img.dataset.caption = (data.desc || stop.subtitle || '');
+        img.onload = () => {
+          wrapEl.classList.add('loaded');
+          const ph = wrapEl.querySelector('.stop-image-placeholder');
+          if (ph) ph.style.display = 'none';
+        };
+        img.onerror = () => {
+          // keep placeholder
+        };
+      }
+    }
+  });
+}
+
+// Lightbox open/close
+function openLightbox(src, caption) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxCaption').textContent = caption || '';
+  lb.classList.add('show');
+}
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('show');
+  document.getElementById('lightboxImg').src = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const lb = document.getElementById('lightbox');
+  if (lb) {
+    lb.addEventListener('click', e => {
+      if (e.target === lb || e.target.id === 'lightboxImg') closeLightbox();
+    });
+    document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  }
+});
+
+
 let map, markers = [], currentlyPlaying = null;
 let synth = window.speechSynthesis;
 let currentUtterance = null;
@@ -804,6 +932,14 @@ function renderStops() {
         <div class="expand-icon">▼</div>
       </div>
       <div class="stop-body">
+        <div class="stop-image-wrap" data-stop="${stop.n}">
+          <div class="stop-image-placeholder">
+            <div class="icon">${stop.icon || '🏛'}</div>
+            <div class="label">Caricamento immagine…</div>
+          </div>
+          <img alt="${stop.title}" loading="lazy">
+          <div class="stop-image-zoom-hint">⤢</div>
+        </div>
         <p class="intro">${stop.intro}</p>
         ${stop.text.split('\n\n').map(p => `<p>${p}</p>`).join('')}
         <div class="stop-controls">
@@ -834,6 +970,36 @@ function renderStops() {
       if (idx >= 0 && markers[idx]) markers[idx].openPopup();
       document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+    // Image lazy-load + lightbox
+    const imgWrap = card.querySelector('.stop-image-wrap');
+    if (imgWrap) {
+      imgWrap.addEventListener('click', (e) => {
+        const img = imgWrap.querySelector('img');
+        if (img && img.src && img.complete && img.naturalWidth > 0) {
+          openLightbox(img.dataset.full || img.src, img.dataset.caption || stop.title);
+        }
+      });
+      // Load image when card is opened OR after a short delay if section visible
+      const triggerLoad = () => loadStopImage(stop, imgWrap);
+      card.querySelector('.stop-header').addEventListener('click', () => {
+        setTimeout(triggerLoad, 100);
+      }, { once: false });
+      // Also pre-load images visible in the first viewport (lazy IO)
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              triggerLoad();
+              io.unobserve(entry.target);
+            }
+          });
+        }, { rootMargin: '200px' });
+        io.observe(card);
+      } else {
+        // Fallback: load all
+        setTimeout(triggerLoad, 500);
+      }
+    }
     list.appendChild(card);
   });
 }
