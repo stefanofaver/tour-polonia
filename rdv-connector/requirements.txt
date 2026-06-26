@@ -1,0 +1,9 @@
+# Il cuore del connettore (lettura FatturaPA XML + motore di proposta) usa solo
+# la libreria standard di Python: per le parti 1 e 2 NON serve installare nulla.
+
+# --- Lettura PDF (parte 1, opzionale) ---
+pypdf>=4.0
+
+# --- Scrittura sul portale RDV via browser (parte 3, da configurare) ---
+# Necessaria solo quando attiveremo l'automazione del portale.
+playwright>=1.40
