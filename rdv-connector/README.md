@@ -16,10 +16,12 @@ di prima nota e — dopo la tua **approvazione** — la scrive sul portale.
 |------|---------|-------|
 | 1. Lettura documenti | FatturaPA XML (completo) + PDF (euristico) | ✅ Funzionante |
 | 2. Motore di proposta | Documento → registrazione di prima nota in partita doppia | ✅ Funzionante |
-| 3. Scrittura sul portale | Automazione browser del portale RDV (login + compilazione form) | ⏳ Da configurare* |
+| 3a. Login + ricognizione portale | Login assistito e raccolta in sola lettura di causali/conti/guide | ✅ Pronto da eseguire* |
+| 3b. Scrittura sul portale | Compilazione automatica dei form di prima nota | ⏳ Dopo la ricognizione |
 
-\* La parte 3 richiede di mappare insieme i form reali di RDV (vedi
-[Prossimi passi](#prossimi-passi)). Io non ho accesso al tuo portale.
+\* Richiede Playwright installato sul tuo PC e il login al tuo account
+(vedi [Portale RDV](#portale-rdv-login-e-ricognizione)). Io non ho accesso al
+tuo portale: la scrittura (3b) verra' costruita sui form reali raccolti in 3a.
 
 ---
 
@@ -143,19 +145,51 @@ python -m unittest discover -s tests
 
 ---
 
-## Prossimi passi
+## Portale RDV: login e ricognizione
 
-Per attivare la **parte 3 (scrittura sul portale)** mi serve, da te:
+Questa fase gira **sul tuo PC** e parte in **sola lettura**: prima di scrivere
+qualunque cosa, raccoglie il materiale per capire il programma e configurarlo
+sul tuo ambiente reale (causali, piano dei conti, guida alla prima nota).
 
-1. Una breve descrizione/registrazione del flusso reale su RDV per inserire una
-   **nuova prima nota** (dove si clicca, come si chiamano i campi, come si
-   selezionano conti e causali).
-2. Confermare se preferisci che lo strumento ti mostri ogni registrazione e
-   chieda conferma **una per una**, oppure un'approvazione **a blocchi**.
+**Sicurezza — login manuale.** Il browser si apre in modo visibile e **accedi
+tu a mano** (password, eventuale 2FA, captcha). Lo strumento **non memorizza la
+password**: salva solo lo stato di sessione in `auth_state.json` (escluso dal
+versionamento) per non rifare il login ogni volta.
 
-Con queste informazioni costruisco l'automazione del browser (Playwright) che
-compila i form **solo dopo la tua approvazione**, con un registro di tutto ciò
-che viene scritto.
+Preparazione (una tantum):
+
+```bash
+pip install -r requirements.txt
+playwright install chromium
+cp config/portale.example.json config/portale.json   # poi adattalo
+```
+
+1) Login assistito (salva la sessione):
+
+```bash
+python -m rdv_connector.cli login --portale config/portale.json
+```
+
+2) Ricognizione. Modalità **manuale** (consigliata all'inizio: navighi tu e
+catturi le pagine che ti interessano, senza dover conoscere gli URL):
+
+```bash
+python -m rdv_connector.cli ricognizione --portale config/portale.json --manuale
+```
+
+Oppure modalità **automatica** (visita gli URL elencati in `config/portale.json`).
+
+Per ogni pagina vengono salvati, nella cartella `output_ricognizione`, tre file:
+`<nome>.html` (sorgente), `<nome>.txt` (testo leggibile) e `<nome>.png`
+(screenshot). Questo materiale serve a configurare conti/causali reali e a
+costruire la successiva fase di scrittura.
+
+## Prossimi passi (scrittura, parte 3b)
+
+Dopo la ricognizione, sui form reali raccolti costruirò la compilazione
+automatica della prima nota, che scriverà **solo dopo la tua approvazione**
+(una per una o a blocchi, come preferisci) e terrà un registro di tutto ciò che
+viene inserito.
 
 ---
 

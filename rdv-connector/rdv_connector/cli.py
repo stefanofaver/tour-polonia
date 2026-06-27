@@ -113,6 +113,36 @@ def comando_proponi(args: argparse.Namespace) -> int:
     return 0
 
 
+def comando_login(args: argparse.Namespace) -> int:
+    # Import ritardato: Playwright serve solo qui, non per 'proponi'.
+    from .portale.ricognizione import carica_config
+    from .portale.sessione import PlaywrightNonDisponibile, SessionePortale
+
+    config = carica_config(args.portale)
+    try:
+        with SessionePortale(
+            config["base_url"], stato_path=config.get("stato_sessione", "auth_state.json")
+        ) as sess:
+            sess.login_manuale()
+    except PlaywrightNonDisponibile as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    return 0
+
+
+def comando_ricognizione(args: argparse.Namespace) -> int:
+    from .portale.ricognizione import carica_config, esegui_ricognizione
+    from .portale.sessione import PlaywrightNonDisponibile
+
+    config = carica_config(args.portale)
+    try:
+        esegui_ricognizione(config, manuale=args.manuale)
+    except PlaywrightNonDisponibile as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="rdv_connector", description="Connettore RDV Network")
     sub = parser.add_subparsers(dest="comando", required=True)
@@ -122,6 +152,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--regole", required=True, help="File JSON delle regole di mappatura")
     p.add_argument("--json", action="store_true", help="Output in formato JSON")
     p.set_defaults(func=comando_proponi)
+
+    pl = sub.add_parser("login", help="Login assistito al portale (salva la sessione)")
+    pl.add_argument("--portale", required=True, help="File JSON di config del portale")
+    pl.set_defaults(func=comando_login)
+
+    pr = sub.add_parser("ricognizione", help="Raccolta in sola lettura di causali, conti e guide")
+    pr.add_argument("--portale", required=True, help="File JSON di config del portale")
+    pr.add_argument("--manuale", action="store_true", help="Catturi tu le pagine navigando nel browser")
+    pr.set_defaults(func=comando_ricognizione)
 
     args = parser.parse_args(argv)
     return args.func(args)
