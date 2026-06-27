@@ -1,0 +1,30 @@
+{
+  "_commento": "Copia questo file in config/regole.json e adattalo ai tuoi dati e al tuo piano dei conti RDV. I codici conto qui sotto sono ESEMPI: sostituiscili con quelli reali del tuo gestionale.",
+
+  "azienda": {
+    "denominazione": "Tour Polonia di Stefano Faver",
+    "partita_iva": "01234567890"
+  },
+
+  "conti": {
+    "debiti_fornitori": { "codice": "20.05.001", "descrizione": "Debiti verso fornitori" },
+    "crediti_clienti":  { "codice": "10.20.001", "descrizione": "Crediti verso clienti" },
+    "iva_credito":      { "codice": "10.30.010", "descrizione": "IVA a credito" },
+    "iva_debito":       { "codice": "20.10.010", "descrizione": "IVA a debito" },
+    "costo_default":    { "codice": "60.10.999", "descrizione": "Acquisti diversi" },
+    "ricavo_default":   { "codice": "50.10.999", "descrizione": "Ricavi diversi" }
+  },
+
+  "causali": {
+    "acquisto": "FATTURA ACQUISTO",
+    "vendita":  "FATTURA VENDITA"
+  },
+
+  "controparti": {
+    "_commento": "Chiave = P.IVA (o codice fiscale) della controparte. Qui si codificano le regole ricorrenti: ogni volta che arriva una fattura da questo soggetto usa questo conto e questa causale.",
+    "02345678901": {
+      "conto": { "codice": "60.10.020", "descrizione": "Cancelleria e materiale di consumo" },
+      "causale": "FATTURA ACQUISTO"
+    }
+  }
+}

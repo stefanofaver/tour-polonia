@@ -1,0 +1,14 @@
+{
+  "_commento": "Copia in config/portale.json e adatta. base_url e' la pagina da cui parte il login. Gli URL in 'pagine' sono ESEMPI/segnaposto: in modalita' --manuale non servono (navighi tu e catturi le pagine), in modalita' automatica vanno sostituiti con gli URL reali del tuo portale (es. la pagina elenco causali, il piano dei conti, la guida).",
+
+  "base_url": "https://accounts.rdvnetwork.it/",
+  "stato_sessione": "auth_state.json",
+  "output_ricognizione": "ricognizione_output",
+
+  "pagine": [
+    { "_commento": "Sostituisci gli URL con quelli reali oppure usa --manuale" },
+    { "nome": "guida-prima-nota", "url": "https://INDIRIZZO-REALE/guida/prima-nota" },
+    { "nome": "elenco-causali",   "url": "https://INDIRIZZO-REALE/causali" },
+    { "nome": "piano-dei-conti",  "url": "https://INDIRIZZO-REALE/piano-conti" }
+  ]
+}

@@ -1,0 +1,18 @@
+# Regole reali (possono contenere dati aziendali): NON versionare.
+config/regole.json
+
+# Documenti contabili reali: mai nel repository.
+fatture/
+documenti/
+*.p7m
+
+# Credenziali / sessioni del portale (parte 3).
+.env
+*.secret
+auth_state.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
