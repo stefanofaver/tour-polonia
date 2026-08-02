@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mercati">
+<title>Mercati · Polonia 2026</title>
+<style>
+:root {
+  --navy: #1B2A4E;
+  --gold: #B68F40;
+  --gold-soft: #E8D9B8;
+  --cream: #FAF7F0;
+  --cream-2: #F1ECE0;
+  --text: #1B2A4E;
+  --muted: #6B7280;
+  --shadow: 0 8px 28px rgba(27, 42, 78, 0.10);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bot: env(safe-area-inset-bottom);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* === HEADER === */
+header {
+  background: var(--navy);
+  color: var(--cream);
+  padding: calc(var(--safe-top) + 12px) 18px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+.head-row { display: flex; justify-content: space-between; align-items: center; }
+.head-title { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 22px; letter-spacing: 0.5px; }
+.head-sub { color: var(--gold-soft); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+.back-btn {
+  background: rgba(255,255,255,0.10);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  font-size: 18px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === CITY TABS === */
+.section-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--cream-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: calc(var(--safe-top) + 56px);
+  z-index: 90;
+}
+.section-tabs::-webkit-scrollbar { display: none; }
+.section-tab {
+  flex: 0 0 auto;
+  background: white;
+  border: 1px solid #E5DDC8;
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.section-tab.active {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+
+/* === MARKET LIST === */
+.markets {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 14px calc(var(--safe-bot) + 40px);
+}
+.city-intro {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  margin: 6px 8px 16px;
+  line-height: 1.5;
+}
+.market-card {
+  background: white;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  border: 1px solid #EFE9D9;
+  overflow: hidden;
+}
+.market-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 16px 12px;
+}
+.market-icon {
+  flex: 0 0 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  border: 1px solid var(--gold-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.market-name {
+  font-family: Georgia, serif;
+  font-size: 19px;
+  color: var(--navy);
+  font-weight: 600;
+}
+.market-place {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.market-body { padding: 0 16px 16px; }
+.market-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #33415C;
+  margin-bottom: 12px;
+}
+.market-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.meta-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.meta-row .k {
+  flex: 0 0 20px;
+  text-align: center;
+}
+.meta-row .v { color: #33415C; }
+.meta-row .v strong { color: var(--navy); }
+.badge {
+  display: inline-block;
+  background: var(--gold-soft);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 10px;
+  padding: 3px 10px;
+  margin-bottom: 10px;
+}
+.map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--navy);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 20px;
+  padding: 9px 16px;
+}
+.map-link:active { opacity: 0.85; }
+
+.footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 8px 0 calc(var(--safe-bot) + 24px);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div>
+      <div class="head-title">Mercati</div>
+      <div class="head-sub">Guida ai mercati · Danzica &amp; Cracovia</div>
+    </div>
+    <a href="index.html" class="back-btn" title="Home">‹</a>
+  </div>
+</header>
+
+<div class="section-tabs">
+  <button class="section-tab active" data-city="danzica">Danzica · ven 8</button>
+  <button class="section-tab" data-city="cracovia">Cracovia · dom 10</button>
+</div>
+
+<div class="markets" id="danzica">
+  <div class="city-intro">I mercati storici di Danzica, tra la Via Reale e il lungofiume della Motława.</div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">🏛</div>
+      <div>
+        <div class="market-name">Hala Targowa</div>
+        <div class="market-place">Plac Dominikański 1 · Città Vecchia</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="badge">Aperto venerdì</div>
+      <div class="market-desc">Il mercato coperto di Danzica, in un elegante edificio neogotico del 1896 accanto alla chiesa di San Nicola. Banchi di frutta, verdura, formaggi, salumi e fiori; nel seminterrato si vedono i resti archeologici di una chiesa romanica del XII secolo.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Orari:</strong> lun–ven 9:00–18:00 circa, sab fino alle 15:00 · domenica chiuso</span></div>
+        <div class="meta-row"><span class="k">🛍</span><span class="v"><strong>Da cercare:</strong> pane fresco, salumi affumicati, formaggi polacchi, fiori</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Hala+Targowa+Gda%C5%84sk">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">🐟</div>
+      <div>
+        <div class="market-name">Targ Rybny</div>
+        <div class="market-place">Mercato del Pesce · Lungofiume Motława</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="market-desc">L'antica piazza del mercato del pesce, affacciata sulla Motława con vista sulla gru medievale Żuraw. Oggi è soprattutto una bella piazza panoramica: in stagione ospita bancarelle e chioschi, ed è una tappa naturale passeggiando lungo il fiume.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Quando:</strong> sempre accessibile · bancarelle stagionali</span></div>
+        <div class="meta-row"><span class="k">📷</span><span class="v"><strong>Da non perdere:</strong> la vista sulla gru Żuraw e sull'isola dei Granai</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Targ+Rybny+Gda%C5%84sk">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">💛</div>
+      <div>
+        <div class="market-name">Ulica Mariacka</div>
+        <div class="market-place">La via dell'ambra · Città Vecchia</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="market-desc">Non un mercato vero e proprio, ma la strada più bella di Danzica per lo shopping: botteghe e bancarelle di ambra del Baltico lungo i caratteristici terrazzini (przedproża), fino alla Basilica di Santa Maria.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Orari:</strong> botteghe aperte in genere 10:00–18:00</span></div>
+        <div class="meta-row"><span class="k">🛍</span><span class="v"><strong>Da cercare:</strong> gioielli in ambra · chiedere il certificato di autenticità</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Ulica+Mariacka+Gda%C5%84sk">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">⚒</div>
+      <div>
+        <div class="market-name">Targ Węglowy</div>
+        <div class="market-place">Mercato del Carbone · Porta d'Oro</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="market-desc">La grande piazza all'inizio della Via Reale, davanti alla Porta d'Oro e al Teatro Shakespeariano. Un tempo qui si commerciava il carbone; oggi ospita fiere e mercatini stagionali ed è il punto di partenza ideale per la passeggiata su ulica Długa.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Quando:</strong> sempre accessibile · eventi e fiere a seconda del periodo</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Targ+W%C4%99glowy+Gda%C5%84sk">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+</div>
+
+<div class="markets" id="cracovia" style="display:none">
+  <div class="city-intro">I mercati di Cracovia: la domenica mattina è perfetta per le pulci a Plac Nowy e l'antiquariato alla Hala Targowa.</div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">🏰</div>
+      <div>
+        <div class="market-name">Sukiennice</div>
+        <div class="market-place">Mercato dei Tessuti · Rynek Główny</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="badge">Aperto domenica</div>
+      <div class="market-desc">Il celebre Mercato dei Tessuti al centro della Piazza del Mercato, attivo da oltre 700 anni: uno dei più antichi "centri commerciali" d'Europa. Sotto le volte rinascimentali, bancarelle di ambra, gioielli in argento, artigianato in legno e souvenir.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Orari:</strong> tutti i giorni, circa 9:00–19:00</span></div>
+        <div class="meta-row"><span class="k">🛍</span><span class="v"><strong>Da cercare:</strong> ambra, scatole intagliate, scacchi in legno, ceramiche di Bolesławiec</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Sukiennice+Krak%C3%B3w">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">🥖</div>
+      <div>
+        <div class="market-name">Plac Nowy</div>
+        <div class="market-place">Kazimierz · quartiere ebraico</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="badge">Domenica mattina · mercatino</div>
+      <div class="market-desc">Il cuore di Kazimierz, con la rotonda Okrąglak al centro. La domenica mattina la piazza si riempie di bancarelle di mercatino delle pulci e abbigliamento. Dagli sportelli dell'Okrąglak si comprano le famose zapiekanki, le baguette gratinate simbolo della piazza.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Quando:</strong> bancarelle soprattutto la mattina · zapiekanki fino a tarda sera</span></div>
+        <div class="meta-row"><span class="k">🍴</span><span class="v"><strong>Da provare:</strong> zapiekanka classica con funghi e formaggio</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Plac+Nowy+Krak%C3%B3w">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">🕰</div>
+      <div>
+        <div class="market-name">Hala Targowa</div>
+        <div class="market-place">Ulica Grzegórzecka · vicino a Kazimierz</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="badge">Domenica mattina · antiquariato</div>
+      <div class="market-desc">Nei giorni feriali è un mercato alimentare, ma la domenica mattina attorno alla hala si tiene il mercatino dell'antiquariato più amato di Cracovia: libri, vinili, monete, fotografie d'epoca e oggetti curiosi. Perfetto per una caccia al tesoro prima di pranzo.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Quando:</strong> domenica mattina presto, fino a mezzogiorno circa</span></div>
+        <div class="meta-row"><span class="k">🛍</span><span class="v"><strong>Da cercare:</strong> stampe, vinili, piccolo antiquariato · contrattare è normale</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Hala+Targowa+Grzeg%C3%B3rzecka+Krak%C3%B3w">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-header">
+      <div class="market-icon">🌷</div>
+      <div>
+        <div class="market-name">Stary Kleparz</div>
+        <div class="market-place">Rynek Kleparski · a nord della Città Vecchia</div>
+      </div>
+    </div>
+    <div class="market-body">
+      <div class="market-desc">Il mercato più antico di Cracovia, attivo dal XIV secolo a due passi dalla Barbacana. Banchi di frutta e verdura, fiori, pane, salumi e il formaggio affumicato oscypek. Molto animato nei giorni feriali e il sabato; la domenica è in gran parte chiuso.</div>
+      <div class="market-meta">
+        <div class="meta-row"><span class="k">🕘</span><span class="v"><strong>Orari:</strong> lun–sab circa 7:00–18:00 · domenica quasi tutto chiuso</span></div>
+        <div class="meta-row"><span class="k">🧀</span><span class="v"><strong>Da provare:</strong> oscypek alla griglia con marmellata di mirtilli rossi</span></div>
+      </div>
+      <a class="map-link" target="_blank" rel="noopener" href="https://maps.google.com/?q=Stary+Kleparz+Krak%C3%B3w">📍 Apri in Google Maps</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Buoni acquisti · Polonia, maggio 2026</div>
+
+<script>
+document.querySelectorAll('.section-tab').forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    document.querySelectorAll('.section-tab').forEach(function (t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('danzica').style.display = tab.dataset.city === 'danzica' ? '' : 'none';
+    document.getElementById('cracovia').style.display = tab.dataset.city === 'cracovia' ? '' : 'none';
+    window.scrollTo(0, 0);
+  });
+});
+</script>
+</body>
+</html>
